@@ -34,7 +34,7 @@ byte readEEPROM(int address) {
 void readSettings() {
     overspeed = EEPROM.read(overspeed_ADDR);
     stall = EEPROM.read(stall_ADDR);
-    battv = EEPROM.read(battv_ADDR);
+    //battv = EEPROM.read(battv_ADDR);
     switch_mode = EEPROM.read(switch_mode_ADDR);
 
     ch_toggle = EEPROM.read(ch_toggle_ADDR);
@@ -130,9 +130,9 @@ void readPanelSettings() {
     panTime_XY[0][panel] = readEEPROM(panTime_x_ADDR + offset);
     panTime_XY[1][panel] = checkPAL(readEEPROM(panTime_y_ADDR + offset));
 
-    //setBit(panB_REG, RSSI_BIT, readEEPROM(panRSSI_en_ADDR));
-    //panRSSI_XY[0] = readEEPROM(panRSSI_x_ADDR);
-    //panRSSI_XY[1] = checkPAL(readEEPROM(panRSSI_y_ADDR));
+    setBit(panB_REG[panel], RSSI_BIT, readEEPROM(panRSSI_en_ADDR + offset));
+    panRSSI_XY[0][panel] = 23 + offset;
+    panRSSI_XY[1][panel] = 1 + offset;
 
     //****** Third set of 8 Panels ******
 

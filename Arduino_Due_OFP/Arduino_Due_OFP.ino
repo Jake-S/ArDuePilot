@@ -15,10 +15,6 @@
 #define pi 3.14159265359
 
 
-// Temporary variables (testing)
-float t1;
-float t2;
-
 // Motor Vars:
 int motor_fr_cmd = 0;
 int motor_fl_cmd = 0;
@@ -71,9 +67,11 @@ short int mc_ptc;
 short int md_ptc;
 long b5_ptc; 
 short temperature;
+unsigned int temp_uncal;
 long pressure;
 const float p0 = 101325;
-float altitude;
+float altitude = 0;
+float altitude_gl = 2300;
 
 // Sensor data:
 byte a_bytes[6];
@@ -101,7 +99,6 @@ float w_error_last[3] = {
 float w_error[3] = {
   0, 0, 0};
 
-//CLaws Vars:
 
 //Safety
 int engage = 0;
@@ -114,10 +111,14 @@ int red_led = 0;
 volatile int gear_pers_count;
 
 
-//Serial output
-int output_i = 0;
-
-
+//OSD vars 
+int output_i = 0; //0 = OSD on, 1 = text output
+int frame = 1;
+int dt_step_array[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+float rssi = 0;
+int motors_armed = 0;
+float throttle_percent = 0;
+int dt_step = 0;
 
 // Initialization
 void setup() {
@@ -135,8 +136,9 @@ void setup() {
 
 
   //Pressure-Temp Init
-  //Wire.begin();
- // bmp085Calibration(&ac1_ptc, &ac2_ptc, &ac3_ptc, &ac4_ptc, &ac5_ptc, &ac6_ptc, &b1_ptc, &b2_ptc, &mb_ptc, &mc_ptc, &md_ptc);
+  Wire1.begin();
+  delay(50);
+  bmp085Calibration(&ac1_ptc, &ac2_ptc, &ac3_ptc, &ac4_ptc, &ac5_ptc, &ac6_ptc, &b1_ptc, &b2_ptc, &mb_ptc, &mc_ptc, &md_ptc);
 
 
   // Initialize IMU/quaternions
@@ -183,14 +185,22 @@ void setup() {
 // Run loop
 void loop() {
 
-  //get Pressure Altitude
-  /*
-  temperature = bmp085GetTemperature(bmp085ReadUT(), ac5_ptc, ac6_ptc, mc_ptc, md_ptc, &b5_ptc);
-  pressure = bmp085GetPressure(bmp085ReadUP(OSS), ac1_ptc, ac2_ptc, ac3_ptc, ac4_ptc,b1_ptc, b2_ptc, b5_ptc, OSS);
-  altitude = (float)44330 * (1 - pow(((float) pressure/p0), 0.190295))*3.28084;
-  */
+  frame++;
+  if(frame>10) frame = 1;
   
-  //Get Sensor Data
+  
+  //get Pressure Altitude
+  if(frame == 1) bmp085RequestUT();
+  if(frame == 4) temperature = bmp085GetTemperature(bmp085ReadUT(), ac5_ptc, ac6_ptc, mc_ptc, md_ptc, &b5_ptc);
+  if(frame == 5) bmp085RequestUP(OSS);
+  if(frame == 10) 
+  {
+  pressure = bmp085GetPressure(bmp085ReadUP(OSS), ac1_ptc, ac2_ptc, ac3_ptc, ac4_ptc,b1_ptc, b2_ptc, b5_ptc, OSS);
+  altitude = (float)44330 * (1 - pow(((float) pressure/p0), 0.190295))*3.28084 - altitude_gl;
+  }
+
+  
+  //Get IMU Sensor Data
   request_IMU_data();
   read_IMU_data(a_bytes,m_bytes,w_bytes);
   unpack_IMU_data(a_bytes,m_bytes,w_bytes,a_raw_data,m_raw_data,w_raw_data);
@@ -208,8 +218,7 @@ void loop() {
   theta += THETA_INSTALL_BIAS;
 
 
-
-  //Update Input commands (disable ISRs quick)
+  //Update Recieved Control commands (disable ISRs quick)
   noInterrupts();
   if(bNewSignal_throttle)
   {
@@ -257,6 +266,7 @@ void loop() {
     delay(600);
     SoundNoTimer(SOUND_PIN,300,NOTE_C4);
     green_led = 0;
+    altitude_gl = altitude + altitude_gl;
   }
 
 
@@ -331,16 +341,69 @@ void loop() {
  controlLEDs(green_led, yellow_led, red_led);
 
 
-
-  osd_display(theta);
+// OSD Output
+ if (output_i == 0)
+ {
+   
+   
+   dt_step_array[frame] = (int)1/deltat;
+   
+   dt_step = dt_step_array[1];
+   for(int i=2;i<=10;i++)
+   {
+     if(dt_step_array[i] < dt_step) dt_step = dt_step_array[i];
+   }
+   
+   throttle_percent = (float)((throttle_pos-1100.0)/(1925.0-1100.0))*100.0;
+   
+   if(throttle_pos>1150)
+  {
+  rssi = 255;
+  }
+  else
+  {
+  rssi = 0;
+  }
+  
+  if(engage == 1 && gear_pers_count <= 25)
+  {
+  motors_armed = 1;
+  }
+  else
+  {
+  motors_armed = 0;
+ }
+  
+   // Place holder variables
+  int control_mode = 1;
+  float hdot = 0;
+  float ultra_altitude = 0;
+  float batt_v = 19.99;
+  float batt_a = 99.99;
+  float dist_home = 0;
+  float dir_home = 0;
+  float lat = 0;
+  float lon = 0;
+  int gps_sats = 0;
+  int gps_lock = 2;
+  
+  
+  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, control_mode, altitude, hdot, ultra_altitude, rssi, batt_v, batt_a, dist_home, dir_home, lat, lon, gps_lock, gps_sats);
+ }
+ 
 
 
   // Display data
   if (output_i == 1)
   {
-
+    Serial.print(altitude);
+     Serial.print("\t");
+      Serial.print(pressure);
+          Serial.print("\t");
+       Serial.print(temperature);
+      Serial.println();
     
-
+/*
     Serial.print("Phi:");
     Serial.print(phi);
     Serial.print("\t");
@@ -351,7 +414,7 @@ void loop() {
     Serial.print(psi);
     Serial.print("\t");
     Serial.println();
-    
+    */
 
 /*
     Serial.print("t:");
@@ -423,7 +486,7 @@ void loop() {
 
   }
 
- // delay(5);
+ 
 }
 
 

@@ -9,7 +9,9 @@ char bmp085Read(unsigned char address);
 short bmp085GetTemperature(unsigned int ut, unsigned int ac5_ptc,unsigned int ac6_ptc, short int mc_ptc,short int md_ptc, long *b5);
 long bmp085GetPressure(unsigned long up,short int ac1,short int ac2,short int ac3,unsigned int ac4,short int b1,short int b2,long b5,const unsigned char OSS);
 
+void bmp085RequestUT();
 unsigned int bmp085ReadUT();
+void bmp085RequestUP(const unsigned char OSS);
 unsigned long bmp085ReadUP(const unsigned char OSS);
 
 

@@ -1,7 +1,6 @@
 /* ************************************************************ */
 /* **************** MAIN PROGRAM - MODULES ******************** */
 /* ************************************************************ */
-
 #undef PROGMEM 
 #define PROGMEM __attribute__(( section(".progmem.data") )) 
 
@@ -15,7 +14,6 @@
 #include <math.h>
 #include <inttypes.h>
 #include <avr/pgmspace.h>
-// Get the common arduino functions
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
 #else
@@ -37,13 +35,12 @@
 
 /* *************************************************/
 /* ***************** DEFINITIONS *******************/
-
 //OSD Hardware 
 //#define ArduCAM328
 #define MinimOSD
 
 #define TELEMETRY_SPEED  57600  // How fast our MAVLink telemetry is coming to Serial port
-#define BOOTTIME         1000   // Time in milliseconds that we show boot loading bar and wait user input
+#define BOOTTIME         500   // Time in milliseconds that we show boot loading bar and wait user input
 
 // Objects and Serial definitions
 FastSerialPort0(Serial);
@@ -52,11 +49,6 @@ OSD osd; //OSD object
 SimpleTimer  mavlinkTimer;
 
 
-uint8_t c1 = 0;
-uint8_t c2 = 0;
-uint8_t d1 = 0;
-uint8_t d2 = 0;
-int loop_counter = 0;
 
 void setup() 
 {
@@ -117,16 +109,11 @@ void setup()
 // Initialize values
 
 
-  // Turn warnings off:
-  osd_fix_type = 2; //  GPS Fix good >= 2
+  // Turn speed warnings off:
   stall = 0;
   overspeed = 100;
-  osd_vbat_A = 99;
-  osd_battery_remaining_A = 99;
-  motor_armed = 1;
-  last_warning = 1;
-
-
+  
+  calc_home = 0;
 
 } // END of setup();
 
@@ -137,53 +124,14 @@ void setup()
 
 void loop() 
 {
-
-  
-
-  
-  while(Serial.available() >= 8) {
-    
-    if(loop_counter == 0)
-    {
-    c1 = Serial.read();
-    c2 = Serial.read();
-    }
-    else
-    {
-      c1 = c2;
-      c2 = Serial.read();
-    }
-    
-    if(c1==B11111110 && c2==B11111110)
-    {
-          d1 = Serial.read();
-          d2 = Serial.read();
-          osd_pitch = (((d1 << 8)+d2)/200-90);
-          d1 = Serial.read();
-          d2 = Serial.read();
-          osd_roll = (((d1 << 8)+d2)/50-180);
-          d1 = Serial.read();
-          d2 = Serial.read();
-          osd_heading = (((d1 << 8)+d2)/50);
-         
-          lastMAVBeat = millis();
-          loop_counter = 0;
-    }
-    else
-    {
-      loop_counter = 1; 
-    }
-    
-  
-  
-  }
+ 
   
   
   
   
 
   
-    //read_mavlink();
+    read_mavlink();
     mavlinkTimer.Run();
 }
 

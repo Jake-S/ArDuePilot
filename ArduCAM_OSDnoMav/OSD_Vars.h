@@ -1,5 +1,11 @@
-/*Panels variables*/
-//Will come from APM telem port
+// Serial Read buffers
+static int loop_counter = 0;
+static uint8_t c1 = 0;
+static uint8_t c2 = 0;
+static uint8_t d1 = 0;
+static uint8_t d2 = 0;
+
+
 
 static float	    nav_roll = 0; // Current desired roll in degrees
 static float        nav_pitch = 0; // Current desired pitch in degrees
@@ -29,15 +35,16 @@ static float        converts = 0;
 static float        converth = 0;
 static uint8_t      overspeed = 0;
 static uint8_t      stall = 0;
-static uint8_t      battv = 0;                //Battery warning voltage - units Volt *10 
-//static int        battp = 0;
+static uint8_t      battv = 11;                
+static int8_t       osd_battery_remaining_A = 10;    
+
 
 static uint8_t      spe = 0;
 static uint8_t      high = 0;
-static float        osd_vbat_A = 0;                 // Battery A voltage in milivolt
-static int16_t      osd_curr_A = 0;                 // Battery A current
-static int8_t       osd_battery_remaining_A = 0;    // 0 to 100 <=> 0 to 1000
-static uint8_t      batt_warn_level = 0;
+static float        osd_vbat_A = 0;                 // Battery A voltage 
+static float        osd_curr_A = 0;                 // Battery A current
+
+static uint8_t      batt_warn_level = 10;
 
 //static uint8_t    osd_battery_pic_A = 0xb4;       // picture to show battery remaining
 //static float      osd_vbat_B = 0;               // voltage in milivolt
@@ -51,7 +58,7 @@ static unsigned long text_timer = 0;
 static unsigned long warning_timer =0;
 
 static uint8_t      warning_type = 0;
-static uint8_t      last_warning = 0;
+static uint8_t      last_warning = 1;
 static uint8_t      warning = 0;
 static uint8_t      osd_off_switch = 0;
 static uint8_t      osd_switch_last = 100;
@@ -61,6 +68,7 @@ static unsigned long         palt = 0;
 static float        osd_climb = 0;
 static float        descend = 0;
 
+static int          calc_home = 0;
 static float        osd_lat = 0;                    // latidude
 static float        osd_lon = 0;                    // longitude
 static uint8_t      osd_satellites_visible = 0;     // number of satelites
@@ -71,14 +79,17 @@ static float        osd_home_lat = 0;               // home latidude
 static float        osd_home_lon = 0;               // home longitude
 static float        osd_home_alt = 0; 
 static long         osd_home_distance = 0;          // distance from home
-static uint8_t      osd_home_direction;             // Arrow direction pointing to home (1-16 to CW loop)
+static uint8_t      osd_home_direction = 0;             // Arrow direction pointing to home (1-16 to CW loop)
 static float        glide = 0;
+
+static int8_t       osd_dt = 0;                  // dt step time in control laws
 
 static int8_t       osd_pitch = 0;                  // pitch from DCM
 static int8_t       osd_roll = 0;                   // roll from DCM
 static int8_t       osd_yaw = 0;                    // relative heading form DCM
 static float        osd_heading = 0;                // ground course heading from GPS
 
+static float        osd_ultra_alt = 0;
 static float        osd_alt = 0;                    // altitude
 static float        osd_airspeed = -1;              // airspeed
 static float        osd_windspeed = 0;
@@ -165,7 +176,9 @@ static uint8_t      rssical = 0;
 static uint8_t      osd_rssi = 0; //raw value from mavlink
 static int16_t      rssi = -99; // scaled value 0-100%
 static bool         rssiraw_on = false; // 0- display scale value | 1- display raw value
-static uint8_t      rssi_warn_level = 0;
+static uint8_t      rssi_warn_level = 30;
+
+static int osd_dt_step = 0;
 
 static uint16_t     ch_raw = 0;
 static uint16_t     osd_chan5_raw = 1000;

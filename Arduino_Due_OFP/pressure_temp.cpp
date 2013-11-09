@@ -20,13 +20,14 @@ void bmp085Calibration(short int *ac1_ptc,short int *ac2_ptc,short int *ac3_ptc,
 int bmp085ReadInt(unsigned char address)
 {
   unsigned char msb, lsb;
-  Wire.beginTransmission(BMP085_ADDRESS);
-  Wire.write(address);
-  Wire.endTransmission();
-  Wire.requestFrom(BMP085_ADDRESS, 2);
-  while(Wire.available()<2);
-  msb = Wire.read();
-  lsb = Wire.read();
+  Wire1.beginTransmission(BMP085_ADDRESS);
+  Wire1.write(address);
+  Wire1.endTransmission();
+  Wire1.requestFrom(BMP085_ADDRESS, 2);
+  float t_start = millis()+10;
+  while(Wire1.available()<2 && millis() < t_start);
+  msb = Wire1.read();
+  lsb = Wire1.read();
 
   return (int) msb<<8 | lsb;
 }
@@ -47,19 +48,19 @@ short bmp085GetTemperature(unsigned int ut, unsigned int ac5_ptc,unsigned int ac
 
 
 // Read the uncompensated temperature value
+void bmp085RequestUT()
+{
+    // Write 0x2E into Register 0xF4
+  // This requests a temperature reading
+  Wire1.beginTransmission(BMP085_ADDRESS);
+  Wire1.write(0xF4);
+  Wire1.write(0x2E);
+  Wire1.endTransmission();
+}
+
 unsigned int bmp085ReadUT()
 {
   unsigned int ut;
-  
-  // Write 0x2E into Register 0xF4
-  // This requests a temperature reading
-  Wire.beginTransmission(BMP085_ADDRESS);
-  Wire.write(0xF4);
-  Wire.write(0x2E);
-  Wire.endTransmission();
-  
-  // Wait at least 4.5ms
-  delay(5);
   
   // Read two bytes from registers 0xF6 and 0xF7
   ut = bmp085ReadInt(0xF6);
@@ -106,50 +107,47 @@ char bmp085Read(unsigned char address)
 {
   unsigned char data;
   
-  Wire.beginTransmission(BMP085_ADDRESS);
-  Wire.write(address);
-  Wire.endTransmission();
+  Wire1.beginTransmission(BMP085_ADDRESS);
+  Wire1.write(address);
+  Wire1.endTransmission();
   
-  Wire.requestFrom(BMP085_ADDRESS, 1);
-  while(!Wire.available())
-    ;
+  Wire1.requestFrom(BMP085_ADDRESS, 1);
+  while(!Wire1.available());
     
-  return Wire.read();
+  return Wire1.read();
 }
 
-
-
+void bmp085RequestUP(const unsigned char OSS){
+ // Write 0x34+(OSS<<6) into register 0xF4
+  // Request a pressure reading w/ oversampling setting
+  Wire1.beginTransmission(BMP085_ADDRESS);
+  Wire1.write(0xF4);
+  Wire1.write(0x34 + (OSS<<6));
+  Wire1.endTransmission();
+}
 // Read the uncompensated pressure value
 unsigned long bmp085ReadUP(const unsigned char OSS)
 {
   unsigned char msb, lsb, xlsb;
   unsigned long up = 0;
-  
-  // Write 0x34+(OSS<<6) into register 0xF4
-  // Request a pressure reading w/ oversampling setting
-  Wire.beginTransmission(BMP085_ADDRESS);
-  Wire.write(0xF4);
-  Wire.write(0x34 + (OSS<<6));
-  Wire.endTransmission();
-  
-  // Wait for conversion, delay time dependent on OSS
-  delay(2 + (3<<OSS));
-  
+ 
+
   // Read register 0xF6 (MSB), 0xF7 (LSB), and 0xF8 (XLSB)
-  Wire.beginTransmission(BMP085_ADDRESS);
-  Wire.write(0xF6);
-  Wire.endTransmission();
-  Wire.requestFrom(BMP085_ADDRESS, 3);
+  Wire1.beginTransmission(BMP085_ADDRESS);
+  Wire1.write(0xF6);
+  Wire1.endTransmission();
+  Wire1.requestFrom(BMP085_ADDRESS, 3);
   
   // Wait for data to become available
-  while(Wire.available() < 3)
-    ;
-  msb = Wire.read();
-  lsb = Wire.read();
-  xlsb = Wire.read();
+  float t_start = millis()+10;
+  while(Wire1.available() < 3 && millis() < t_start);
+  msb = Wire1.read();
+  lsb = Wire1.read();
+  xlsb = Wire1.read();
   
   up = (((unsigned long) msb << 16) | ((unsigned long) lsb << 8) | (unsigned long) xlsb) >> (8-OSS);
   
   return up;
 }
+
 

@@ -47,7 +47,8 @@ void setHomeVars(OSD &osd)
 {
   float dstlon, dstlat;
   long bearing;
-  
+  if(calc_home == 1)
+  {
   if(osd_got_home == 0 && osd_fix_type > 1){
     osd_home_lat = osd_lat;
     osd_home_lon = osd_lon;
@@ -91,6 +92,6 @@ void setHomeVars(OSD &osd)
     if(osd_home_direction > 16) osd_home_direction = 0;
 
   }
-
+  }
 }
 

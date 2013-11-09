@@ -6,9 +6,11 @@ Arduino Due based multirotor autopilot software.
 
 Installation Guide:
 
+REQUIRES ARDUINO IDE 1.5.4+ (interrupts now work right...)
+
 /Arduino_Due_OFP/Arduino_Due_OFP.ino gets installed on main Arduino Due
 
-/ArduCAM_OSDnoMav/ArduCAM_OSDnoMav.ino gets installed on ATmega328 chip on the miminOSD
+/ArduCAM_OSDnoMav/ArduCAM_OSDnoMav.ino gets installed on ATmega328 chip on the minimOSD
 
 /IMU_Razor_Code/IMU_Razor_Code.ino gets installed on the ATmega328 chip on the 9DOF Razor IMU
 

@@ -43,6 +43,13 @@ void writePanels(){
             {
                 if(ISd(panel,Warn_BIT)) panWarn(panWarn_XY[0][panel], panWarn_XY[1][panel]); // this must be here so warnings are always checked
                 //Testing bits from 8 bit register A 
+              
+               // DT panel
+                panDTstep(panRSSI_XY[0][panel], panRSSI_XY[1][panel]+2);   //?x?
+                panRSSI(panRSSI_XY[0][panel] , panRSSI_XY[1][panel] ); //??x??
+                
+                
+                
                 if(ISa(panel,Cen_BIT)) panCenter(panCenter_XY[0][panel], panCenter_XY[1][panel]);   //4x2
                 if(ISa(panel,Pit_BIT)) panPitch(panPitch_XY[0][panel], panPitch_XY[1][panel]); //5x1
                 if(ISa(panel,Rol_BIT)) panRoll(panRoll_XY[0][panel], panRoll_XY[1][panel]); //5x1
@@ -58,14 +65,13 @@ void writePanels(){
                 if(ISb(panel,Head_BIT)) panHeading(panHeading_XY[0][panel], panHeading_XY[1][panel]); //13x3
                 if(ISb(panel,MavB_BIT)) panMavBeat(panMavBeat_XY[0][panel], panMavBeat_XY[1][panel]); //13x3
 
-                if(osd_got_home == 1){
-                    if(ISb(panel,HDis_BIT)) panHomeDis(panHomeDis_XY[0][panel], panHomeDis_XY[1][panel]); //13x3
-                    if(ISb(panel,HDir_BIT)) panHomeDir(panHomeDir_XY[0][panel], panHomeDir_XY[1][panel]); //13x3
-                }
+                if(ISb(panel,HDis_BIT)) panHomeDis(panHomeDis_XY[0][panel], panHomeDis_XY[1][panel]); //13x3
+                if(ISb(panel,HDir_BIT)) panHomeDir(panHomeDir_XY[0][panel], panHomeDir_XY[1][panel]); //13x3
 
                 if(ISb(panel,Time_BIT)) panTime(panTime_XY[0][panel], panTime_XY[1][panel]);
-                if(ISb(panel,WDir_BIT)) panWPDir(panWPDir_XY[0][panel], panWPDir_XY[1][panel]); //??x??
-                if(ISb(panel,WDis_BIT)) panWPDis(panWPDis_XY[0][panel], panWPDis_XY[1][panel]); //??x??
+                // Disable way points
+                //if(ISb(panel,WDir_BIT)) panWPDir(panWPDir_XY[0][panel], panWPDir_XY[1][panel]); //??x??
+                //if(ISb(panel,WDis_BIT)) panWPDis(panWPDis_XY[0][panel], panWPDis_XY[1][panel]); //??x??
 
                 //Testing bits from 8 bit register C 
                 //if(osd_got_home == 1){
@@ -85,7 +91,7 @@ void writePanels(){
                 if(ISd(panel,WindS_BIT)) panWindSpeed(panWindSpeed_XY[0][panel], panWindSpeed_XY[1][panel]);
                 if(ISd(panel,Climb_BIT)) panClimb(panClimb_XY[0][panel], panClimb_XY[1][panel]);
                 if(ISd(panel,Tune_BIT)) panTune(panTune_XY[0][panel], panTune_XY[1][panel]);
-                if(ISd(panel,RSSI_BIT)) panRSSI(panRSSI_XY[0][panel], panRSSI_XY[1][panel]); //??x??
+                
                 //if(ISd(panel,Eff_BIT)) panEff(panEff_XY[0][panel], panEff_XY[1][panel]);
                 if(ISd(panel,CALLSIGN_BIT)) panCALLSIGN(panCALLSIGN_XY[0][panel], panCALLSIGN_XY[1][panel]);
            } else { //panel == npanels
@@ -160,6 +166,21 @@ void panRSSI(int first_col, int first_line){
     if(!rssiraw_on) rssi = (int16_t)((float)(rssi - rssipersent)/(float)(rssical-rssipersent)*100.0f);
     if (rssi < -99) rssi = -99;
     osd.printf("%c%3i%c", 0xE1, rssi, 0x25); 
+    osd.closePanel();
+}
+
+/* **************************************************************** */
+// Panel  : panDTstep
+// Needs  : X, Y locations
+// Output : 
+// Size   : 1 x 7Hea  (rows x chars)
+// Staus  : done
+
+void panDTstep(int first_col, int first_line){
+    osd.setPanel(first_col, first_line);
+    osd.openPanel();
+    osd.printf_P(PSTR("dt"));
+    osd.printf("%3i", (int)osd_dt_step); //0xB3,
     osd.closePanel();
 }
 
@@ -391,7 +412,7 @@ void panOff(){
 void panCur_A(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    osd.printf("%c%5.2f%c", 0xE4, (float(osd_curr_A) * .01), 0x8F);
+    osd.printf("%c%5.2f%c", 0xE4, (float(osd_curr_A)), 0x8F);
     osd.closePanel();
 }
 
@@ -502,7 +523,7 @@ void panWarn(int first_col, int first_line){
                     if ((osd_airspeed * converts) > (float)overspeed) warning_type = 3;
                     break;
                 case 4:
-                    if (osd_vbat_A < float(battv)/10.0 || osd_battery_remaining_A < batt_warn_level) warning_type = 4;
+                    if ((float)osd_vbat_A < (float)battv) warning_type = 4;
                     break;
                 case 5:
                     if (rssi < rssi_warn_level && rssi != -99 && !rssiraw_on) warning_type = 5;
@@ -611,7 +632,7 @@ void panTime(int first_col, int first_line){
 void panHomeDis(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    osd.printf("%c%5.0f%c", 0x1F, (double)((osd_home_distance) * converth), high);
+    osd.printf("%c%5.0f%c", 0x1F, (float)((osd_home_distance) * converth), high);
     osd.closePanel();
 }
 
@@ -691,7 +712,7 @@ void panBatt_A(int first_col, int first_line){
         osd.printf(" %c%5.2f%c", 0xE2, (double)osd_vbat_A, 0x8E);
     else osd.printf("%c%5.2f%c%c", 0xE2, (double)osd_vbat_A, 0x8E, osd_battery_pic_A);
     */
-    osd.printf("%c%5.2f%c", 0xE2, (double)osd_vbat_A, 0x8E);
+   osd.printf("%c%5.2f%c", 0xE2, (float)osd_vbat_A, 0x8E);
     osd.closePanel();
 }
 
@@ -754,7 +775,7 @@ void panGPSats(int first_col, int first_line){
 void panGPS(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    osd.printf("%c%11.6f|%c%11.6f", 0x83, (double)osd_lat, 0x84, (double)osd_lon);
+    osd.printf("%c%11.5f|%c%11.5f", 0x83, (double)osd_lat, 0x84, (double)osd_lon);
     osd.closePanel();
 }
 
