@@ -7,6 +7,7 @@ uint8_t sencond_half;
 uint16_t osd_buffer;
 uint16_t spare = 0;
 
+// Package data and send to OSD/Telemetry
 void osd_display(int frame, float phi, float theta, float psi, int dt, int motor_armed, float throttle, int control_mode, float altitude, float hdot, float ultra_altitude, float rssi, float batt_v, float batt_a, float dist_home, float dir_home, float lat, float lon, int gps_lock, int gps_sats)
 {
   // Frame 1: [B10000001B10000001,(theta+90)*200, (phi+180)*50, (psi)*50]
@@ -14,13 +15,12 @@ void osd_display(int frame, float phi, float theta, float psi, int dt, int motor
   // Frame 3: [B10000011B10000011, altitude, hdot, ultrasonic altitude]
   // Frame 4: [B10000100B10000100, RSSI, batt volt, batt A]
   // Frame 5: [B10000101B10000101, dist home, dir home, spare]
-  // Frame 6: [B10000110B10000110, GPS Lat, GPS Lon (3 bytes each)] 
-  // Frame 7: [B10000111B10000111, GPS lock, GPS satellites, spare]  
+  // Frame 6: [B10000110B10000110, GPS Lat (4 bytes), GPS lock] 
+  // Frame 7: [B10000111B10000111, GPS lon (4 bytes), GPS satellites]  
   // Frame 8: [B10001000B10001000, spare, spare, spare] 
   // Frame 9: [B10001001B10001001, spare, spare, spare] 
   // Frame10: [B10001010B10001010, spare, spare, spare] 
- 
- // 16384
+
   
    if(frame == 1)
    {

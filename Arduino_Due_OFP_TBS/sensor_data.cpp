@@ -5,7 +5,7 @@
 
 void request_IMU_data()
 {
-  Serial2.write((byte)9);
+  Serial1.write((byte)9);
 }
 
 void read_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes)
@@ -14,19 +14,21 @@ void read_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes)
   int t_start = millis();
 
   
-    while(Serial2.available()<18 && ((millis()-t_start)<100)); // wait for data
+    while(Serial1.available()<18 && ((millis()-t_start)<100)); // wait for data
     
-    if(Serial2.available()>17)
+    if(Serial1.available()>17)
     {
     // read data
-    for(int j=0;j<6;j++) a_bytes[j] = Serial2.read();
-    for(int j=0;j<6;j++) m_bytes[j] = Serial2.read();
-    for(int j=0;j<6;j++) w_bytes[j] = Serial2.read();
+    for(int j=0;j<6;j++) a_bytes[j] = Serial1.read();
+    for(int j=0;j<6;j++) m_bytes[j] = Serial1.read();
+    for(int j=0;j<6;j++) w_bytes[j] = Serial1.read();
+
+
     }
    
    // clear serial buffer
-    Serial2.flush();
-    while(Serial2.available()>0) Serial2.read();
+    Serial1.flush();
+    while(Serial1.available()>0) Serial1.read();
    
 }
 
@@ -84,16 +86,16 @@ void cal_IMU_data(float *a_raw_data,float *m_raw_data,float *w_raw_data, float *
 
 
   // Axis rotations (x = nose, y = right wing, z = into earth)
-  a_n_xyz[0] = a_n_unk[1];
-  a_n_xyz[1] = a_n_unk[0];
+  a_n_xyz[0] = a_n_unk[0];
+  a_n_xyz[1] = -a_n_unk[1];
   a_n_xyz[2] = a_n_unk[2];
 
-  m_n_xyz[0] = -m_n_unk[2];
-  m_n_xyz[1] = -m_n_unk[0];
+  m_n_xyz[0] = -m_n_unk[0];
+  m_n_xyz[1] = m_n_unk[2];
   m_n_xyz[2] = -m_n_unk[1];
 
-  w_dps_xyz[0] = -w_dps_unk[1];
-  w_dps_xyz[1] = -w_dps_unk[0];
+  w_dps_xyz[0] = -w_dps_unk[0];
+  w_dps_xyz[1] =  w_dps_unk[1];
   w_dps_xyz[2] = -w_dps_unk[2];
 
   // Calibrate xyz gyro

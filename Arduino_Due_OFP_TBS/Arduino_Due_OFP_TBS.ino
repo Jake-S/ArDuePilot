@@ -119,27 +119,29 @@ float rssi = 0;
 int motors_armed = 0;
 float throttle_percent = 0;
 int dt_step = 0;
+int voltage_analog_in = 0;
+float batt_v = 0.0; 
 
 // Initialization
 void setup() {
   
   Serial.begin(57600);
     
-  Serial2.begin(57600);
+  Serial1.begin(57600);
   
   pinMode(GREEN_LED, OUTPUT);  
   pinMode(YELLOW_LED, OUTPUT);  
   pinMode(RED_LED, OUTPUT);  
   pinMode(SOUND_PIN, OUTPUT); 
   
-  
-
+  pinMode(VOLTAGE_PIN_AN, INPUT);
 
   //Pressure-Temp Init
+  /*
   Wire1.begin();
   delay(50);
   bmp085Calibration(&ac1_ptc, &ac2_ptc, &ac3_ptc, &ac4_ptc, &ac5_ptc, &ac6_ptc, &b1_ptc, &b2_ptc, &mb_ptc, &mc_ptc, &md_ptc);
-
+*/
 
   // Initialize IMU/quaternions
   request_IMU_data();
@@ -152,7 +154,7 @@ void setup() {
   {
     estimate_quaternions(w_dps_xyz[0]*pi/180, w_dps_xyz[1]*pi/180, w_dps_xyz[2]*pi/180, a_n_xyz[0], a_n_xyz[1], a_n_xyz[2], m_n_xyz[0], m_n_xyz[1], m_n_xyz[2], q[0], q[1], q[2], q[3], w_error_last, deltat,  q_new, w_error, int(1));
     for(int j=0;j<4;j++) q[j] = q_new[j];
-    delay(25);
+    delay(1);
   }
 
 
@@ -165,18 +167,18 @@ void setup() {
   attachInterrupt(FLAP_PIN,ISR_flap,CHANGE);
 
   //Motor Servos
-  motor_FR.attach(MOTOR_4_PIN);
-  motor_FL.attach(MOTOR_1_PIN);
+  motor_FR.attach(MOTOR_1_PIN);
+  motor_FL.attach(MOTOR_2_PIN);
   motor_BR.attach(MOTOR_3_PIN);
-  motor_BL.attach(MOTOR_2_PIN);
+  motor_BL.attach(MOTOR_4_PIN);
 
-  delay(50);
+  delay(100);
   motor_FR.writeMicroseconds(0); 
   motor_FL.writeMicroseconds(0); 
   motor_BR.writeMicroseconds(0); 
   motor_BL.writeMicroseconds(0); 
   
-  delay(250);
+  delay(100);
   green_led = 1;
   gear_pers_count = 0;
 }
@@ -188,7 +190,7 @@ void loop() {
   frame++;
   if(frame>10) frame = 1;
   
-  
+  /*
   //get Pressure Altitude
   if(frame == 1) bmp085RequestUT();
   if(frame == 4) temperature = bmp085GetTemperature(bmp085ReadUT(), ac5_ptc, ac6_ptc, mc_ptc, md_ptc, &b5_ptc);
@@ -198,6 +200,7 @@ void loop() {
   pressure = bmp085GetPressure(bmp085ReadUP(OSS), ac1_ptc, ac2_ptc, ac3_ptc, ac4_ptc,b1_ptc, b2_ptc, b5_ptc, OSS);
   altitude = (float)44330 * (1 - pow(((float) pressure/p0), 0.190295))*3.28084 - altitude_gl;
   }
+  */
 
   
   //Get IMU Sensor Data
@@ -205,8 +208,8 @@ void loop() {
   read_IMU_data(a_bytes,m_bytes,w_bytes);
   unpack_IMU_data(a_bytes,m_bytes,w_bytes,a_raw_data,m_raw_data,w_raw_data);
   cal_IMU_data(a_raw_data,m_raw_data,w_raw_data,a_n_xyz,m_n_xyz,w_dps_xyz);
-
-
+    
+     
   //Run state estimation
   deltat = (micros()-t_last)/1000000;
   t_last = micros();
@@ -249,7 +252,7 @@ void loop() {
   
 
 
-  // Arm the system by pumping throttle (move to function)
+  // Arm the system by pumping throttle 
   if (counter_arm1 == 60)
    SoundNoTimer(SOUND_PIN,300,NOTE_B5);
   if (counter_arm2 == 60)
@@ -257,7 +260,7 @@ void loop() {
     
   if ((engage == 0) && (throttle_pos < 1250))
     counter_arm1++;
-  if ((engage == 0) && (counter_arm1 > 60) && (throttle_pos > 1250) && (flap_pos < 1700))
+  if ((engage == 0) && (counter_arm1 > 60) && (throttle_pos > 1250) && (flap_pos < 1700)) //requires you to be in normal control laws
     counter_arm2++;
   if ((engage == 0) && (counter_arm2 > 60) && (throttle_pos < 1150))
   {
@@ -266,14 +269,14 @@ void loop() {
     delay(600);
     SoundNoTimer(SOUND_PIN,300,NOTE_C4);
     green_led = 0;
-    altitude_gl = altitude + altitude_gl;
+    altitude_gl = altitude + altitude_gl; // Set this altitude to be ground altitude
   }
 
 
   // Control Laws
   if (engage == 1) 
   {
-    if (throttle_pos >= 1200)
+    if (throttle_pos >= 1175)
     {
       if(flap_pos < 1700)
       {
@@ -318,18 +321,19 @@ void loop() {
     motor_BL.writeMicroseconds(0); 
   }
   else
-  {
-    motor_FR.writeMicroseconds(motor_fr_cmd); 
+  {  
+     motor_FR.writeMicroseconds(motor_fr_cmd); 
     motor_FL.writeMicroseconds(motor_fl_cmd); 
     motor_BR.writeMicroseconds(motor_br_cmd); 
     motor_BL.writeMicroseconds(motor_bl_cmd); 
+    
   }
 
 
     
 
  // Caution
-  if(motor_fr_cmd > 1200 || motor_fl_cmd > 1200 || motor_br_cmd > 1200 || motor_bl_cmd > 1200)
+  if(motor_fr_cmd > 1175 || motor_fl_cmd > 1175 || motor_br_cmd > 1175 || motor_bl_cmd > 1175)
   {
         green_led = 0;
         red_led = 1;
@@ -345,41 +349,39 @@ void loop() {
  if (output_i == 0)
  {
    
-   
-   dt_step_array[frame] = (int)1/deltat;
-   
-   dt_step = dt_step_array[1];
-   for(int i=2;i<=10;i++)
+   dt_step_array[frame-1] = (int)1/deltat;
+   dt_step = dt_step_array[0];
+   for(int i=1;i<10;i++)
    {
      if(dt_step_array[i] < dt_step) dt_step = dt_step_array[i];
-   }
+   } // Worst Frame rate over last 10 frames
    
    throttle_percent = (float)((throttle_pos-1100.0)/(1925.0-1100.0))*100.0;
    
-   if(throttle_pos>1150)
-  {
-  rssi = 255;
-  }
-  else
-  {
-  rssi = 0;
-  }
+   if(throttle_pos>1150) {
+      rssi = 255;  }
+   else  {
+      rssi = 0;  }
   
-  if(engage == 1 && gear_pers_count <= 25)
+  if(engage == 1 && gear_pers_count <= 25)  {
+     motors_armed = 1; }
+  else  {
+     motors_armed = 0; }
+  
+  if(frame == 2)
   {
-  motors_armed = 1;
+  analogReadResolution(12);
+  voltage_analog_in = analogRead(VOLTAGE_PIN_AN);
+  
+  batt_v = ((float)voltage_analog_in) * 0.01238570 + 0.36476789;
   }
-  else
-  {
-  motors_armed = 0;
- }
   
    // Place holder variables
   int control_mode = 1;
   float hdot = 0;
   float ultra_altitude = 0;
-  float batt_v = 19.99;
-  float batt_a = 99.99;
+
+  float batt_a = 0;
   float dist_home = 0;
   float dir_home = 0;
   float lat = 0;
@@ -396,13 +398,8 @@ void loop() {
   // Display data
   if (output_i == 1)
   {
-    Serial.print(altitude);
-     Serial.print("\t");
-      Serial.print(pressure);
-          Serial.print("\t");
-       Serial.print(temperature);
-      Serial.println();
     
+
 /*
     Serial.print("Phi:");
     Serial.print(phi);
@@ -414,7 +411,7 @@ void loop() {
     Serial.print(psi);
     Serial.print("\t");
     Serial.println();
-    */
+   */
 
 /*
     Serial.print("t:");
