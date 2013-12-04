@@ -121,6 +121,9 @@ float rssi = 0;
 int motors_armed = 0;
 float throttle_percent = 0;
 int dt_step = 0;
+int voltage_analog_in = 0;
+float batt_v = 0.0; 
+
 
 // Initialization
 void setup() {
@@ -134,28 +137,8 @@ void setup() {
   pinMode(RED_LED, OUTPUT);  
   pinMode(SOUND_PIN, OUTPUT); 
 
-
-  //Pressure-Temp Init
-  Wire1.begin();
-  delay(50);
-  bmp085Calibration(&ac1_ptc, &ac2_ptc, &ac3_ptc, &ac4_ptc, &ac5_ptc, &ac6_ptc, &b1_ptc, &b2_ptc, &mb_ptc, &mc_ptc, &md_ptc);
-
-
-  // Initialize IMU/quaternions
-  request_IMU_data();
-  read_IMU_data(a_bytes,m_bytes,w_bytes);
-  unpack_IMU_data(a_bytes,m_bytes,w_bytes,a_raw_data,m_raw_data,w_raw_data);
-  cal_IMU_data(a_raw_data,m_raw_data,w_raw_data,a_n_xyz,m_n_xyz,w_dps_xyz);
-  deltat = 1/50;
-
-  for(int i=1; i<100;i++)
-  {
-    estimate_quaternions(w_dps_xyz[0]*pi/180, w_dps_xyz[1]*pi/180, w_dps_xyz[2]*pi/180, a_n_xyz[0], a_n_xyz[1], a_n_xyz[2], m_n_xyz[0], m_n_xyz[1], m_n_xyz[2], q[0], q[1], q[2], q[3], w_error_last, deltat,  q_new, w_error, int(1));
-    for(int j=0;j<4;j++) q[j] = q_new[j];
-    delay(1);
-  }
-
-
+  pinMode(VOLTAGE_PIN_AN, INPUT);
+  
   // Receiver Interrupts:
   attachInterrupt(THROTTLE_PIN,ISR_throttle,CHANGE);
   attachInterrupt(AIL_PIN,ISR_roll,CHANGE);
@@ -180,7 +163,29 @@ void setup() {
   green_led = 1;
   gear_pers_count = 0;
 
-  delay(2000);
+
+  /*
+  //Pressure-Temp Init
+  Wire1.begin();
+  delay(50);
+  bmp085Calibration(&ac1_ptc, &ac2_ptc, &ac3_ptc, &ac4_ptc, &ac5_ptc, &ac6_ptc, &b1_ptc, &b2_ptc, &mb_ptc, &mc_ptc, &md_ptc);
+*/
+
+  // Initialize IMU/quaternions
+  request_IMU_data();
+  read_IMU_data(a_bytes,m_bytes,w_bytes);
+  unpack_IMU_data(a_bytes,m_bytes,w_bytes,a_raw_data,m_raw_data,w_raw_data);
+  cal_IMU_data(a_raw_data,m_raw_data,w_raw_data,a_n_xyz,m_n_xyz,w_dps_xyz);
+  deltat = 1/50;
+
+  for(int i=1; i<1000;i++)
+  {
+    estimate_quaternions(w_dps_xyz[0]*pi/180, w_dps_xyz[1]*pi/180, w_dps_xyz[2]*pi/180, a_n_xyz[0], a_n_xyz[1], a_n_xyz[2], m_n_xyz[0], m_n_xyz[1], m_n_xyz[2], q[0], q[1], q[2], q[3], w_error_last, deltat,  q_new, w_error, int(1));
+    for(int j=0;j<4;j++) q[j] = q_new[j];
+    delay(1);
+  }
+
+
 }
 
 
@@ -189,7 +194,6 @@ void loop() {
 
   frame++;
   if(frame>10)  frame = 1;
-
 
 
   //get Pressure Altitude
@@ -393,12 +397,21 @@ void loop() {
     else  {
       motors_armed = 0; 
     }
+    
+    
+    if(frame == 2)
+    {
+    analogReadResolution(12);
+    voltage_analog_in = analogRead(VOLTAGE_PIN_AN);
 
+      batt_v = (((float)voltage_analog_in/4095) * 3.3) * ((985.0+216.0)/216.0);
+      }
+      
+      
     // Place holder variables
     int control_mode = 1;
     float hdot = 0;
     float ultra_altitude = 0;
-    float batt_v = 19.99;
     float batt_a = 99.99;
     float dist_home = 0;
     float dir_home = 0;

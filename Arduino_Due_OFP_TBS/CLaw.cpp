@@ -10,14 +10,14 @@ void control_law(int ThrottleIn, int PitchIn, int RollIn, int YawIn, int FlapIn,
 
   float yaw_sign = 1;
   
-  float theta_Kp = 1.2;
-  float phi_Kp   = 1.2;
+  float theta_Kp = 1.18;
+  float phi_Kp   = 1.18;
   float theta_Ki = 0.0;
   float phi_Ki   = 0.0;
   
-  float p_Kp = -0.6;
-  float q_Kp = -0.6;
-  float r_Kp = 1.3;
+  float p_Kp = -0.58;
+  float q_Kp = -0.58;
+  float r_Kp = 1.62;
   
   float theta_cmd;
   float phi_cmd;
@@ -39,11 +39,11 @@ void control_law(int ThrottleIn, int PitchIn, int RollIn, int YawIn, int FlapIn,
   if (ThrottleIn >= 1925)  ThrottleIn = 1925; // Limit max throttle cmd to allow for an extra 50ms above that for control
   
   // Stick Shaping
-  theta_cmd = -1.1*(0.0000005667*pow((float)PitchIn,3)-0.0026106873*pow((float)PitchIn,2) + 4.1236831405*(float)PitchIn - 2227.0978);
-  phi_cmd   = -1.1*(0.0000005667*pow((float)RollIn,3)-0.0026106873*pow((float)RollIn,2) + 4.1236831405*(float)RollIn - 2227.0978);
+  theta_cmd = -1.2*(0.0000005667*pow((float)PitchIn,3)-0.0026106873*pow((float)PitchIn,2) + 4.1236831405*(float)PitchIn - 2227.0978);
+  phi_cmd   = -1.2*(0.0000005667*pow((float)RollIn,3)-0.0026106873*pow((float)RollIn,2) + 4.1236831405*(float)RollIn - 2227.0978);
   
   YawIn -= 1526;
-  yaw_cmd = -(float)YawIn/1.25;
+  yaw_cmd = -(float)YawIn/1.35;
   
   
   // Angle Error

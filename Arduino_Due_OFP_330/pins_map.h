@@ -19,6 +19,9 @@
 #define AUX2_PIN 39
 //#define AUX3_PIN 37
 
+// Current and Voltage sensor
+#define VOLTAGE_PIN_AN A8
+
 // SA
 #define SOUND_PIN 13
 #define RED_LED 8
