@@ -8,14 +8,14 @@ static float phi_int;
 void control_law(int ThrottleIn, int PitchIn, int RollIn, int YawIn, int FlapIn, float phi, float theta, float psi, float w_dps_xyz[3],float a_n_xyz[3], int *motor_fr_cmd, int *motor_fl_cmd, int *motor_br_cmd,int *motor_bl_cmd)
 {
 
-  float theta_Kp = 1.2;
-  float phi_Kp   = 1.2;
+  float theta_Kp = 0.7;
+  float phi_Kp   = 0.7;
   float theta_Ki = 0.0;
   float phi_Ki   = 0.0;
   
-  float p_Kp = -0.6;
-  float q_Kp = -0.6;
-  float r_Kp = 1.3;
+  float p_Kp = -0.35;
+  float q_Kp = -0.35;
+  float r_Kp = 0.7;
   
   float theta_cmd;
   float phi_cmd;

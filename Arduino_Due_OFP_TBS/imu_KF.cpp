@@ -1,6 +1,5 @@
 /*
-#include <math.h>
-#include "imu.h"
+#include <math.h
 
 
 void filtUpdate(float w_x,float w_y,float w_z,float a_x,float a_y,float a_z,float m_x,float m_y,float m_z,float q_1,float q_2,float q_3,float q_4,float P_last[4][4],float dt, float *q_new,float *P1_new,float *P2_new,float *P3_new,float *P4_new)

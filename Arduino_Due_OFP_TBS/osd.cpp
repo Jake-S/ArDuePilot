@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include "osd.h"
 
 uint8_t first_half;  
 uint8_t sencond_half; 
@@ -24,139 +23,139 @@ void osd_display(int frame, float phi, float theta, float psi, int dt, int motor
   
    if(frame == 1)
    {
-    Serial.write(B10000001);
-    Serial.write(B10000001);
+    Serial3.write(B10000001);
+    Serial3.write(B10000001);
     osd_buffer = (short int)((theta+90)*80);
     first_half   = osd_buffer >> 8;   // >>>> >>>> ########
     sencond_half = osd_buffer & B11111111; // ######## ________
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)((phi+180)*40);
     first_half   = osd_buffer >> 8;  
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)((psi)*40);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
    }
    else if(frame == 2)
   {
-    Serial.write(B10000010);
-    Serial.write(B10000010);
-    Serial.write((uint8_t)(dt));
-    Serial.write((uint8_t)(motor_armed));
+    Serial3.write(B10000010);
+    Serial3.write(B10000010);
+    Serial3.write((uint8_t)(dt));
+    Serial3.write((uint8_t)(motor_armed));
     osd_buffer = (short int)(throttle*150);
     first_half   = osd_buffer >> 8;  
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(control_mode);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
   }
     else if(frame == 3)
   {
-    Serial.write(B10000011);
-    Serial.write(B10000011);
+    Serial3.write(B10000011);
+    Serial3.write(B10000011);
     osd_buffer = (short int)(altitude);
     first_half   = osd_buffer >> 8;   // >>>> >>>> ########
     sencond_half = osd_buffer & B11111111; // ######## ________
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(hdot*100);
     first_half   = osd_buffer >> 8;  
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(ultra_altitude*200);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
   }
   else if(frame == 4)
   {
-    Serial.write(B10000100);
-    Serial.write(B10000100);
+    Serial3.write(B10000100);
+    Serial3.write(B10000100);
     osd_buffer = (short int)(rssi);
     first_half   = osd_buffer >> 8;   // >>>> >>>> ########
     sencond_half = osd_buffer & B11111111; // ######## ________
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(batt_v*100);
     first_half   = osd_buffer >> 8;  
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(batt_a*100);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
   }
     else if(frame == 5)
   {
-    Serial.write(B10000101);
-    Serial.write(B10000101);
+    Serial3.write(B10000101);
+    Serial3.write(B10000101);
     osd_buffer = (short int)(dist_home);
     first_half   = osd_buffer >> 8;   // >>>> >>>> ########
     sencond_half = osd_buffer & B11111111; // ######## ________
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(dir_home*40);
     first_half   = osd_buffer >> 8;  
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(spare);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
   }
    else if(frame == 6)
   {
-    Serial.write(B10000110);
-    Serial.write(B10000110);
+    Serial3.write(B10000110);
+    Serial3.write(B10000110);
     osd_buffer = (short int)(lat*100);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)((lat*100 - (float)(osd_buffer))*1000);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(gps_lock);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
   }
   else if(frame == 7)
   {
-    Serial.write(B10000111);
-    Serial.write(B10000111);
+    Serial3.write(B10000111);
+    Serial3.write(B10000111);
     osd_buffer = (short int)(lon*100);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)((lon*100 - (float)(osd_buffer))*1000);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
     osd_buffer = (short int)(gps_sats);
     first_half   = osd_buffer >> 8;
     sencond_half = osd_buffer & B11111111;
-    Serial.write(first_half);
-    Serial.write(sencond_half);
+    Serial3.write(first_half);
+    Serial3.write(sencond_half);
   }
 }
