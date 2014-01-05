@@ -280,7 +280,7 @@ void loop() {
 
   if ((engage == 0) && (throttle_pos < 1250))
     counter_arm1++;
-  if ((engage == 0) && (counter_arm1 > 60) && (throttle_pos > 1250) && (flap_pos < 1700)) //requires you to be in normal control laws
+  if ((engage == 0) && (counter_arm1 > 60) && (throttle_pos > 1250) && (flap_pos > 1200)) //requires you to be in normal control laws
     counter_arm2++;
   if ((engage == 0) && (counter_arm2 > 60) && (throttle_pos < 1150))
   {
@@ -299,7 +299,7 @@ void loop() {
   {
     if (throttle_pos >= 1200)
     {
-      if(flap_pos < 1700)
+      if(flap_pos > 1200)
       {
         // Attitude control laws
         control_law(throttle_pos, pitch_pos, roll_pos, yaw_pos, flap_pos, phi, theta, psi, w_dps_xyz, a_n_xyz, &motor_fr_cmd, &motor_fl_cmd, &motor_br_cmd, &motor_bl_cmd);
@@ -444,7 +444,7 @@ void loop() {
      Serial.println();
      
      */
-    /*
+    
     Serial.print("t:");
      Serial.print(throttle_pos);
      Serial.print("\t");
@@ -464,7 +464,7 @@ void loop() {
      Serial.print(flap_pos);
      Serial.print("\t");
      Serial.println();
-     */
+     
 
     /*
     Serial.print("FR:");
@@ -479,6 +479,9 @@ void loop() {
      Serial.print("BR:");
      Serial.print(motor_br_cmd);
      Serial.print("\t");
+     
+    Serial.print("dt:");
+    Serial.print(deltat);
      Serial.println();
      */
 
@@ -538,13 +541,7 @@ void loop() {
      Serial.print(w_dps_xyz[2]);
      */
 
-    Serial.print("dt:");
-    Serial.print(dt_step);
 
-    Serial.print("\t");
-    Serial.print("T");
-    Serial.print(temperature);
-    Serial.println();
   }
 
 

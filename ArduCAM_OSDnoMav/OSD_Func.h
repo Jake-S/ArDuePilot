@@ -45,6 +45,7 @@ char setBatteryPic(uint16_t bat_level)
 
 void setHomeVars(OSD &osd)
 {
+  
   float dstlon, dstlat;
   long bearing;
   if(calc_home == 1)
@@ -77,7 +78,7 @@ void setHomeVars(OSD &osd)
     //DST to Home
     dstlat = fabs(osd_home_lat - osd_lat) * 111319.5;
     dstlon = fabs(osd_home_lon - osd_lon) * 111319.5 * scaleLongDown;
-    osd_home_distance = sqrt(sq(dstlat) + sq(dstlon));
+   // osd_home_distance = sqrt(sq(dstlat) + sq(dstlon));
 
     //DIR to Home
     dstlon = (osd_home_lon - osd_lon); //OffSet_X
@@ -88,8 +89,8 @@ void setHomeVars(OSD &osd)
     if(bearing < 0) bearing += 360;//normalization
     bearing = bearing - osd_heading;//relative home direction
     if(bearing < 0) bearing += 360; //normalization
-    osd_home_direction = round((float)(bearing/360.0f) * 16.0f) + 1;//array of arrows =)
-    if(osd_home_direction > 16) osd_home_direction = 0;
+   // osd_home_direction = round((float)(bearing/360.0f) * 16.0f) + 1;//array of arrows =)
+   // if(osd_home_direction > 16) osd_home_direction = 0;
 
   }
   }

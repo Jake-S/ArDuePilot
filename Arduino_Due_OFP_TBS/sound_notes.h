@@ -1,6 +1,4 @@
-/*************************************************
- * Public Constants
- *************************************************/
+
 void SoundNoTimer(int pin, unsigned long duration,  unsigned int frequency);
 
 #define NOTE_B0  31

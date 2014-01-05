@@ -24,6 +24,6 @@
 #define CAL_MAG_m_y 0.0025591558004
 #define CAL_MAG_m_z 0.0016675819183
 
-#define CAL_GYRO_zero_x 1.1
-#define CAL_GYRO_zero_y -1.5
-#define CAL_GYRO_zero_z .6
+#define CAL_GYRO_zero_x 1.4
+#define CAL_GYRO_zero_y 1.6
+#define CAL_GYRO_zero_z -.4

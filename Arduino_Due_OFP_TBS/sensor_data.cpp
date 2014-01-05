@@ -1,5 +1,4 @@
-//#include <Wire.h>
-#include "sensor_data.h"
+#include <Arduino.h>
 #include "calibration.h"
 
 
@@ -87,16 +86,16 @@ void cal_IMU_data(float *a_raw_data,float *m_raw_data,float *w_raw_data, float *
 
   // Axis rotations (x = nose, y = right wing, z = into earth)
   a_n_xyz[0] = a_n_unk[0];
-  a_n_xyz[1] = -a_n_unk[1];
-  a_n_xyz[2] = a_n_unk[2];
+  a_n_xyz[1] = a_n_unk[1];
+  a_n_xyz[2] = -a_n_unk[2];
 
   m_n_xyz[0] = -m_n_unk[0];
-  m_n_xyz[1] = m_n_unk[2];
-  m_n_xyz[2] = -m_n_unk[1];
+  m_n_xyz[1] = -m_n_unk[2];
+  m_n_xyz[2] = m_n_unk[1];
 
   w_dps_xyz[0] = -w_dps_unk[0];
-  w_dps_xyz[1] =  w_dps_unk[1];
-  w_dps_xyz[2] = -w_dps_unk[2];
+  w_dps_xyz[1] = -w_dps_unk[1];
+  w_dps_xyz[2] = w_dps_unk[2];
 
   // Calibrate xyz gyro
   w_dps_xyz[0] -= CAL_GYRO_zero_x;

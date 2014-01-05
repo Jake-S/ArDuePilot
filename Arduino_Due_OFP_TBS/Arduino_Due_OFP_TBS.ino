@@ -2,7 +2,6 @@
 #include <Wire.h>
 
 #include "pins_map.h"
-#include "sensor_data.h"
 #include "calibration.h"
 #include "pressure_temp.h"
 #include "sound_notes.h"
@@ -17,6 +16,11 @@ void estimate_quaternions(float w_x,float w_y,float w_z,float a_x,float a_y,floa
 void Quaternion2Euler(float q[4],float *phi,float *theta,float *psi);
 void osd_display(int frame, float phi, float theta, float psi, int dt, int motor_armed, float throttle, int control_mode, float altitude_m, float hdot, float ultra_altitude, float rssi, float batt_v, float batt_a, float dist_home, float dir_home, float lat, float lon, int gps_lock, int gps_sats);
 int arming(int throttle_pos,int pitch_pos,int roll_pos,int yaw_pos,int flap_pos,float phi,float theta, int gps_fix,int gps_sats, float *altitude_home_m, float altitude_m, double *lat_home, double lat, double *lon_home, double lon);
+void request_IMU_data();
+void read_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes);
+void unpack_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes, float *a_raw_data, float *m_raw_data,float *w_raw_data);
+void cal_IMU_data(float *a_raw_data,float *m_raw_data,float *w_raw_data, float *a_n_xyz, float *m_n_xyz,float *w_dps_xyz);
+
 
 // Motor Vars:
 int motor_fr_cmd = 0;
@@ -127,7 +131,9 @@ int motors_armed = 0;
 float throttle_percent = 0;
 int dt_step = 0;
 int voltage_analog_in = 0;
+int current_analog_in = 0;
 float batt_v = 0.0; 
+float batt_i = 0.0; 
 
 // Initialization
 void setup() {
@@ -157,7 +163,7 @@ void setup() {
   unpack_IMU_data(a_bytes,m_bytes,w_bytes,a_raw_data,m_raw_data,w_raw_data);
   cal_IMU_data(a_raw_data,m_raw_data,w_raw_data,a_n_xyz,m_n_xyz,w_dps_xyz);
   deltat = 1/50;
-  for(int i=1; i<100;i++)
+  for(int i=1; i<500;i++)
   {
     estimate_quaternions(w_dps_xyz[0]*pi/180, w_dps_xyz[1]*pi/180, w_dps_xyz[2]*pi/180, a_n_xyz[0], a_n_xyz[1], a_n_xyz[2], m_n_xyz[0], m_n_xyz[1], m_n_xyz[2], q[0], q[1], q[2], q[3], w_error_last, deltat,  q_new, w_error, int(1));
     for(int j=0;j<4;j++) q[j] = q_new[j];
@@ -199,6 +205,7 @@ void loop() {
   
   
   //get Pressure Altitude
+  /*
   if(frame == 1) bmp085RequestUT();
   if(frame == 4) temperature = bmp085GetTemperature(bmp085ReadUT(), ac5_ptc, ac6_ptc, mc_ptc, md_ptc, &b5_ptc);
   if(frame == 5) bmp085RequestUP(OSS);
@@ -207,10 +214,16 @@ void loop() {
   pressure = bmp085GetPressure(bmp085ReadUP(OSS), ac1_ptc, ac2_ptc, ac3_ptc, ac4_ptc,b1_ptc, b2_ptc, b5_ptc, OSS);
   altitude_m = (float)44330 * (1 - pow(((float) pressure/p0), 0.190295))*3.28084 - altitude_home_m;
   }
+ */
  
   // Get GPS data
+  /*
   gps_data = getGPSdata(&gps_fix, &gps_sats, &lat, &lon, &gps_alt_m);
   GPS2home(lat, lat_home, lon, lon_home, psi, &heading_home, &dist_home_m);
+    */
+  gps_fix = 2;
+  gps_sats = 9;
+
   
   //Get IMU Sensor Data
   request_IMU_data();
@@ -278,33 +291,28 @@ void loop() {
 
 
   // Send commands to ESCs
-  if (gear_pers_count > 25)
+  if (gear_pers_count < 25)
   {
+    motor_FR.writeMicroseconds(motor_fr_cmd); 
+    motor_FL.writeMicroseconds(motor_fl_cmd); 
+    motor_BR.writeMicroseconds(motor_br_cmd); 
+    motor_BL.writeMicroseconds(motor_bl_cmd); 
+  }
+  else
+  {  
     motor_FR.writeMicroseconds(0); 
     motor_FL.writeMicroseconds(0); 
     motor_BR.writeMicroseconds(0); 
     motor_BL.writeMicroseconds(0); 
   }
-  else
-  {  
-    motor_FR.writeMicroseconds(motor_fr_cmd); 
-    motor_FL.writeMicroseconds(motor_fl_cmd); 
-    motor_BR.writeMicroseconds(motor_br_cmd); 
-    motor_BL.writeMicroseconds(motor_bl_cmd); 
-    
-  }
 
 
 
-// OSD Output
- if (output_i == 0)
- {
-   // Place holder variables
+  // OSD Output
+  // Place holder variables
   int control_mode = 1;
   float hdot = 0;
   float ultra_altitude = 0;
-  float batt_a = 0;
-  
   
    dt_step_array[frame-1] = (int)1/deltat;
    dt_step = dt_step_array[0];
@@ -329,20 +337,21 @@ void loop() {
   {
   analogReadResolution(12);
   voltage_analog_in = analogRead(VOLTAGE_PIN_AN);
-  
   batt_v = ((float)voltage_analog_in) * 0.01238570 + 0.36476789;
+  
+  current_analog_in = analogRead(CURRENT_PIN_AN);
+  batt_i = ((float)current_analog_in) * 0.01238570 + 0.36476789; // update this equation
   }
   
   
-  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, control_mode, altitude_m, hdot, ultra_altitude, rssi, batt_v, batt_a, dist_home_m, heading_home, lat, lon, gps_fix, gps_sats);
- }
+  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, control_mode, altitude_m, hdot, ultra_altitude, rssi, batt_v, batt_i, dist_home_m, heading_home, lat, lon, gps_fix, gps_sats);
  
 
 
   // Display data
-  if (output_i == 1)
+  if(1)
   {
-/*
+
     Serial.print("Phi:");
     Serial.print(phi);
     Serial.print("\t");
@@ -353,7 +362,7 @@ void loop() {
     Serial.print(psi);
     Serial.print("\t");
     Serial.println();
-   */
+   
 /*
     Serial.print("t:");
     Serial.print(throttle_pos);
@@ -398,13 +407,13 @@ void loop() {
 */
  /*
     Serial.print("0:");
-     Serial.print(w_dps_xyz[0]);
+     Serial.print(m_n_xyz[0]);
      Serial.print("\t");
      Serial.print("1:");
-     Serial.print(w_dps_xyz[1]);
+     Serial.print(m_n_xyz[1]);
      Serial.print("\t");
      Serial.print("2:");
-     Serial.print(w_dps_xyz[2]);
+     Serial.print(m_n_xyz[2]);
      Serial.println();
     */
     
@@ -485,14 +494,13 @@ void ISR_gear() {
       gear_pos_v = (int)(micros() - ulStartPeriod_gear);
       ulStartPeriod_gear = 0;
    
-      // Gear failsafe switch, if down for >~1 second command motors in intertupt to 0, allows for engine cutoff if stuck in infinite loop in code
       if(gear_pos_v <1300)
       {
-      gear_pers_count++;
+       if(gear_pers_count < 28) gear_pers_count++;
       }
       else
       {
-      gear_pers_count = 0;
+      if(gear_pers_count > 0) gear_pers_count--;
       }
       
       if (gear_pers_count > 25)

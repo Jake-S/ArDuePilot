@@ -1,4 +1,3 @@
-// Math library required for `sqrt'
 #include <math.h>
 #include "calibration.h"
 

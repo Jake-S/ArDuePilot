@@ -73,7 +73,7 @@ int arming(int throttle_pos,int pitch_pos,int roll_pos,int yaw_pos,int flap_pos,
     */
     
   }
-
+ // Mode 5 = RTH
 
 
   if(gps_fix >= 1 && gps_sats >= 3)
@@ -89,6 +89,7 @@ int arming(int throttle_pos,int pitch_pos,int roll_pos,int yaw_pos,int flap_pos,
     SoundNoTimer(SOUND_PIN,300,NOTE_B5);
   if (counter_arm2 == 60)
     SoundNoTimer(SOUND_PIN,300,NOTE_B5);
+
 
   // LEDS
   if(green_led > .5)

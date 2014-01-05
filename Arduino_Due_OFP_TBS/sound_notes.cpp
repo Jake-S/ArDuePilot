@@ -1,7 +1,3 @@
-//==============================================================================
-//    SoundNoTimer - Quick and dirty tone function to try to output a frequency
-//            to a speaker for some simple sounds.
-//==============================================================================
 #include <Arduino.h>
 #include "sound_notes.h"
 

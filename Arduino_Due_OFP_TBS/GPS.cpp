@@ -1,6 +1,9 @@
 
 #include <Arduino.h>
 
+#define pi 3.14159265359
+
+
 // WARNING WARNING WARNING
 // THIS REQUIRES A SERIAL BUFFER OF SIZE 66 OR GREATER, MUST EDIT RINGBUFFER.H library!!!!
 byte gps_msg[67];
@@ -65,7 +68,7 @@ int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gp
       gps_string_valid = 0;
     }
   }
-  
+
   return(gps_data);
 }
 
@@ -73,9 +76,38 @@ int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gp
 
 void GPS2home(double lat,double lat_home,double lon,double lon_home,float psi, float *heading_home,float *dist_home_m)
 {
-  
-  
+  // 1 = current
+  //2  = home
+
+  float deg2rad = pi/180;
+
+
+
+  // Haversine formula
+  int E_radius_km = 6371;
+
+  double dLat = (lat_home-lat)*deg2rad;
+  double dLon = (lon_home-lon)*deg2rad;
+  double lat_rad = lat*deg2rad;
+  double lat_home_rad = lat_home*deg2rad;
+
+  double a = sin(dLat/2) * sin(dLat/2) + sin(dLon/2) * sin(dLon/2) * cos(lat_rad) * cos(lat_home_rad); 
+  double c = 2 * atan2(sqrt(a), sqrt(1-a)); 
+  *dist_home_m = float(E_radius_km * c * 1000);
+
+  double y = sin(dLon) * cos(lat_home_rad);
+  double x = cos(lat_rad)*sin(lat_home_rad) - sin(lat_rad)*cos(lat_home_rad)*cos(dLon);
+  double bearing = atan2(y, x) / deg2rad;
+  if(bearing < 0) bearing += 360;
+  bearing = bearing - 180;//go towards home, not away
+  if(bearing < 0) bearing += 360;
+  bearing = bearing - psi;
+  if(bearing < 0) bearing += 360; 
+
+  *heading_home = bearing;
 }
+
+
 
 
 
