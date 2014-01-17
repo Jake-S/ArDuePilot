@@ -306,8 +306,9 @@ void loop() {
       }
       else
       {
+          control_law(throttle_pos, pitch_pos, roll_pos, yaw_pos, flap_pos, phi, theta, psi, w_dps_xyz, a_n_xyz, &motor_fr_cmd, &motor_fl_cmd, &motor_br_cmd, &motor_bl_cmd);
         //Aerobatic - rate control laws
-        control_law_rate(throttle_pos, pitch_pos, roll_pos, yaw_pos, flap_pos, phi, theta, psi, w_dps_xyz, a_n_xyz, &motor_fr_cmd, &motor_fl_cmd, &motor_br_cmd, &motor_bl_cmd);
+        //control_law_rate(throttle_pos, pitch_pos, roll_pos, yaw_pos, flap_pos, phi, theta, psi, w_dps_xyz, a_n_xyz, &motor_fr_cmd, &motor_fl_cmd, &motor_br_cmd, &motor_bl_cmd);
       }
 
       red_led = 1;
@@ -431,7 +432,7 @@ void loop() {
   {
 
 
-    /*
+    
     Serial.print("Phi:");
      Serial.print(phi);
      Serial.print("\t");
@@ -443,8 +444,8 @@ void loop() {
      Serial.print("\t");
      Serial.println();
      
-     */
-    
+     
+    /*
     Serial.print("t:");
      Serial.print(throttle_pos);
      Serial.print("\t");
@@ -464,7 +465,7 @@ void loop() {
      Serial.print(flap_pos);
      Serial.print("\t");
      Serial.println();
-     
+     */
 
     /*
     Serial.print("FR:");

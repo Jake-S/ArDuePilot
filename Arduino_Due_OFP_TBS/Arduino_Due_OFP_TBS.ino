@@ -1,4 +1,7 @@
 #include <Servo.h>
+#include <SPI.h>
+#include <SdFat.h>
+#include <String.h>
 #include <Wire.h>
 
 #include "pins_map.h"
@@ -8,7 +11,6 @@
 
 #define pi 3.14159265359
 
-// Prototypes
 void control_law(int ThrottleIn, int PitchIn, int RollIn, int YawIn, int FlapIn, float phi, float theta, float psi, float w_dps_xyz[3],float a_n_xyz[3],  int *motor_fr_cmd, int *motor_fl_cmd, int *motor_br_cmd,int *motor_bl_cmd);
 int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gps_alt_m);
 void GPS2home(double lat,double lat_home,double lon,double lon_home,float psi,float *heading_home,float *dist_home_m);
@@ -21,6 +23,9 @@ void read_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes);
 void unpack_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes, float *a_raw_data, float *m_raw_data,float *w_raw_data);
 void cal_IMU_data(float *a_raw_data,float *m_raw_data,float *w_raw_data, float *a_n_xyz, float *m_n_xyz,float *w_dps_xyz);
 
+//One_off_switches
+int sd_logging = 0;
+int serial_output = 0;
 
 // Motor Vars:
 int motor_fr_cmd = 0;
@@ -120,10 +125,9 @@ float dist_home_m = 0;
 
 //gear failsafe switch
 volatile int gear_pers_count;
-int mode;
+int mode = 0;
 
 //OSD vars 
-int output_i = 0; //0 = OSD on, 1 = text output
 int frame = 1;
 int dt_step_array[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 float rssi = 0;
@@ -135,10 +139,16 @@ int current_analog_in = 0;
 float batt_v = 0.0; 
 float batt_i = 0.0; 
 
+//SD Card
+char SD_file_name[25];
+SdFat sd;
+ofstream SDFile;
+int buf_frame_counter = 0;
+
 // Initialization
 void setup() {
   
-  Serial.begin(57600); // RSSI and USB
+  Serial.begin(57600); // USB Serial Output
   Serial1.begin(57600); // IMU
   Serial2.begin(115200); // GPS
   Serial3.begin(57600); // OSD and TM
@@ -151,7 +161,27 @@ void setup() {
   
   pinMode(VOLTAGE_PIN_AN, INPUT);
   pinMode(CURRENT_PIN_AN, INPUT);
-
+  pinMode(RSSI_PIN_AN, INPUT);
+  
+  //SD Card
+  if(sd_logging)
+  {
+  sd.begin(SD_CARD_SPI_PIN, SPI_FULL_SPEED);
+  int log_num = 1;
+  while(1){
+       String stringOne = "log_";
+      String stringTwo = stringOne + log_num;
+      String stringThree = stringTwo + ".txt";
+      stringThree.toCharArray(SD_file_name, 25);
+      if(sd.exists(SD_file_name)==1)
+          log_num++;
+      else
+          break;
+   }
+  SDFile.open(SD_file_name, O_CREAT | O_WRITE | O_APPEND);
+  }
+     
+     
   //Pressure-Temp Init
   Wire1.begin();
   delay(50);
@@ -195,6 +225,8 @@ void setup() {
   
   delay(100);
   gear_pers_count = 0;
+  
+
 }
 
 
@@ -204,8 +236,8 @@ void loop() {
   if(frame>10) frame = 1;
   
   
+  Wire1.begin();
   //get Pressure Altitude
-  /*
   if(frame == 1) bmp085RequestUT();
   if(frame == 4) temperature = bmp085GetTemperature(bmp085ReadUT(), ac5_ptc, ac6_ptc, mc_ptc, md_ptc, &b5_ptc);
   if(frame == 5) bmp085RequestUP(OSS);
@@ -214,15 +246,10 @@ void loop() {
   pressure = bmp085GetPressure(bmp085ReadUP(OSS), ac1_ptc, ac2_ptc, ac3_ptc, ac4_ptc,b1_ptc, b2_ptc, b5_ptc, OSS);
   altitude_m = (float)44330 * (1 - pow(((float) pressure/p0), 0.190295))*3.28084 - altitude_home_m;
   }
- */
  
   // Get GPS data
-  /*
   gps_data = getGPSdata(&gps_fix, &gps_sats, &lat, &lon, &gps_alt_m);
   GPS2home(lat, lat_home, lon, lon_home, psi, &heading_home, &dist_home_m);
-    */
-  gps_fix = 2;
-  gps_sats = 9;
 
   
   //Get IMU Sensor Data
@@ -310,9 +337,8 @@ void loop() {
 
   // OSD Output
   // Place holder variables
-  int control_mode = 1;
-  float hdot = 0;
-  float ultra_altitude = 0;
+   float hdot = 0;
+   float ultra_altitude = 0;
   
    dt_step_array[frame-1] = (int)1/deltat;
    dt_step = dt_step_array[0];
@@ -342,16 +368,33 @@ void loop() {
   current_analog_in = analogRead(CURRENT_PIN_AN);
   batt_i = ((float)current_analog_in) * 0.01238570 + 0.36476789; // update this equation
   }
-  
-  
-  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, control_mode, altitude_m, hdot, ultra_altitude, rssi, batt_v, batt_i, dist_home_m, heading_home, lat, lon, gps_fix, gps_sats);
+
+  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, mode, altitude_m, hdot, ultra_altitude, rssi, batt_v, batt_i, dist_home_m, heading_home, lat, lon, gps_fix, gps_sats);
  
+  
+  // SD Card data Logging
+  if(sd_logging)
+  {
+  SDFile << "12345678" << "\n";
+  if(frame == 7)
+  {
+    buf_frame_counter++;
+    if(buf_frame_counter>=4)
+    {
+    SDFile << flush;
+    buf_frame_counter = 1;
+    }
+  }
+  }
+  
 
 
   // Display data
-  if(1)
+  if(serial_output)
   {
 
+
+    /*
     Serial.print("Phi:");
     Serial.print(phi);
     Serial.print("\t");
@@ -362,6 +405,33 @@ void loop() {
     Serial.print(psi);
     Serial.print("\t");
     Serial.println();
+   */
+   
+   /*
+       Serial.print("Fix:");
+    Serial.print(gps_fix);
+    Serial.print("\t");
+    Serial.print("Sats:");
+    Serial.print(gps_sats);
+    Serial.print("\t");
+    Serial.print("lat:");
+    Serial.print(lat,6);
+    Serial.print("\t");
+        Serial.print("lon:");
+    Serial.print(lon,6);
+      Serial.println();
+       
+        */
+     
+     
+    Serial.print("t:");
+    Serial.print(temperature);
+    Serial.print("\t");
+        Serial.print("a:");
+    Serial.print(altitude_m,1);
+    Serial.print("\t");
+     Serial.println();
+   
    
 /*
     Serial.print("t:");
@@ -435,6 +505,10 @@ void loop() {
 
  
 }
+
+
+
+
 
 
 

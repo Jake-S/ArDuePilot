@@ -1,7 +1,6 @@
 #include <Wire.h>
 #include "pressure_temp.h"
 #include <Arduino.h>
-
 void bmp085Calibration(short int *ac1_ptc,short int *ac2_ptc,short int *ac3_ptc,unsigned int *ac4_ptc,unsigned int *ac5_ptc,unsigned int *ac6_ptc,short int *b1_ptc,short int *b2_ptc,short int *mb_ptc,short int *mc_ptc,short int *md_ptc)
 {
   *ac1_ptc = bmp085ReadInt(0xAA);

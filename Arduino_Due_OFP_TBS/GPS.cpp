@@ -6,6 +6,7 @@
 
 // WARNING WARNING WARNING
 // THIS REQUIRES A SERIAL BUFFER OF SIZE 66 OR GREATER, MUST EDIT RINGBUFFER.H library!!!!
+// 
 byte gps_msg[67];
 int msg_lng = 66;
 

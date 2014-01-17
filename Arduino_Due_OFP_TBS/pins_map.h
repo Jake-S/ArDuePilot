@@ -20,9 +20,12 @@
 #define AUX3_PIN 34
 
 // Current and Voltage sensor
-#define VOLTAGE_PIN_AN A8
-#define CURRENT_PIN_AN A9
-// SA
+#define VOLTAGE_PIN_AN A0
+#define CURRENT_PIN_AN A1
+
+#define RSSI_PIN_AN A5
+
+#define SD_CARD_SPI_PIN 52
 
 #define RED_LED 8
 #define YELLOW_LED 9
