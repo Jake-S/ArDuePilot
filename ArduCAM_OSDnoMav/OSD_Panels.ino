@@ -904,29 +904,14 @@ void panFlightMode(int first_col, int first_line){
     osd.openPanel();
     //char c1 = 0xE0 ;//"; char c2; char c3; char c4; char c5; 
     char* mode_str="";
-    if (apm_mav_type == 2){ //ArduCopter MultiRotor or ArduCopter Heli
-        if (osd_mode == 0) mode_str = "stab"; //Stabilize
-        else if (osd_mode == 1) mode_str = "acro"; //Acrobatic
-        else if (osd_mode == 2) mode_str = "alth"; //Alt Hold
-        else if (osd_mode == 3) mode_str = "auto"; //Auto
-        else if (osd_mode == 4) mode_str = "guid"; //Guided
-        else if (osd_mode == 5) mode_str = "loit"; //Loiter
-        else if (osd_mode == 6) mode_str = "retl"; //Return to Launch
-        else if (osd_mode == 7) mode_str = "circ"; //Circle
-        else if (osd_mode == 8) mode_str = "posi"; //Position
-        else if (osd_mode == 9) mode_str = "land"; //Land
-        else if (osd_mode == 10) mode_str = "oflo"; //OF_Loiter
-    } else if(apm_mav_type == 1){ //ArduPlane
-        if (osd_mode == 0) mode_str = "manu"; //Manual
-        else if (osd_mode == 1) mode_str = "circ"; //CIRCLE
-        else if (osd_mode == 2) mode_str = "stab"; //Stabilize
-        else if (osd_mode == 5) mode_str = "fbwa"; //FLY_BY_WIRE_A
-        else if (osd_mode == 6) mode_str = "fbwb"; //FLY_BY_WIRE_B
-        else if (osd_mode == 10) mode_str = "auto"; //AUTO
-        else if (osd_mode == 11) mode_str = "retl"; //Return to Launch
-        else if (osd_mode == 12) mode_str = "loit"; //Loiter
-        else if (osd_mode == 15) mode_str = "guid"; //GUIDED
-    }
+        if (osd_nav_mode == 0) mode_str = "safe"; //Stabilize
+        else if (osd_nav_mode == 1) mode_str = "arm1"; 
+        else if (osd_nav_mode == 2) mode_str = "arm2"; 
+        else if (osd_nav_mode == 3) mode_str = "setH"; 
+        else if (osd_nav_mode == 4) mode_str = "flt "; 
+        else if (osd_nav_mode == 5) mode_str = "rth "; 
+
+    
     osd.printf("%c%s", 0xE0, mode_str);
     osd.closePanel();
 }

@@ -13,19 +13,21 @@
 
 void control_law(int ThrottleIn, int PitchIn, int RollIn, int YawIn, int FlapIn, float phi, float theta, float psi, float w_dps_xyz[3],float a_n_xyz[3],  int *motor_fr_cmd, int *motor_fl_cmd, int *motor_br_cmd,int *motor_bl_cmd);
 int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gps_alt_m);
+void GPSwarmBoot(float lat, float lon, int altitude);
 void GPS2home(double lat,double lat_home,double lon,double lon_home,float psi,float *heading_home,float *dist_home_m);
 void estimate_quaternions(float w_x,float w_y,float w_z,float a_x,float a_y,float a_z,float m_x,float m_y,float m_z,float SEq_1,float SEq_2,float SEq_3,float SEq_4,float w_error_last[3],float dt, float *q_new,float *w_error, int init);
 void Quaternion2Euler(float q[4],float *phi,float *theta,float *psi);
-void osd_display(int frame, float phi, float theta, float psi, int dt, int motor_armed, float throttle, int control_mode, float altitude_m, float hdot, float ultra_altitude, float rssi, float batt_v, float batt_a, float dist_home, float dir_home, float lat, float lon, int gps_lock, int gps_sats);
-int arming(int throttle_pos,int pitch_pos,int roll_pos,int yaw_pos,int flap_pos,float phi,float theta, int gps_fix,int gps_sats, float *altitude_home_m, float altitude_m, double *lat_home, double lat, double *lon_home, double lon);
+void osd_display(int frame, float phi, float theta, float psi, int dt, int motor_armed, float throttle, int control_mode, float altitude_ft, float hdot, float ultra_altitude, float rssi, float batt_v, float batt_a, float dist_home, float dir_home, float lat, float lon, int gps_lock, int gps_sats);
+int arming(int throttle_pos,int pitch_pos,int roll_pos,int yaw_pos,int flap_pos,float phi,float theta, int gps_fix,int gps_sats, float *altitude_home_ft, float altitude_ft, double *lat_home, double lat, double *lon_home, double lon);
 void request_IMU_data();
 void read_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes);
 void unpack_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes, float *a_raw_data, float *m_raw_data,float *w_raw_data);
 void cal_IMU_data(float *a_raw_data,float *m_raw_data,float *w_raw_data, float *a_n_xyz, float *m_n_xyz,float *w_dps_xyz);
+float low_pass(float u, float y_last, float tau, float dt, float max_delta);
 
 //One_off_switches
 int sd_logging = 0;
-int serial_output = 0;
+int serial_output = 1;
 
 // Motor Vars:
 int motor_fr_cmd = 0;
@@ -82,8 +84,18 @@ short temperature;
 unsigned int temp_uncal;
 long pressure;
 const float p0 = 101325;
-float altitude_m = 0;
-float altitude_home_m = 0;
+float altitude_ft = 0;
+float altitude_raw_ft = 0;
+float altitude_home_ft = 0;
+float altitude_agl_ft = 0;
+int alt_t_us = 0;
+int p_t1 = 0;
+int p_t2 = 0;
+int p_counter = 0;
+int p_init = 0;
+int p_error = 0;
+int p_timeout_counter = 0;
+
 
 // Sensor data:
 byte a_bytes[6];
@@ -136,8 +148,10 @@ float throttle_percent = 0;
 int dt_step = 0;
 int voltage_analog_in = 0;
 int current_analog_in = 0;
+float batt_raw_v = 0.0;
 float batt_v = 0.0; 
 float batt_i = 0.0; 
+float batt_raw_i = 0.0; 
 
 //SD Card
 char SD_file_name[25];
@@ -145,12 +159,13 @@ SdFat sd;
 ofstream SDFile;
 int buf_frame_counter = 0;
 
+
 // Initialization
 void setup() {
   
   Serial.begin(57600); // USB Serial Output
   Serial1.begin(57600); // IMU
-  Serial2.begin(115200); // GPS
+  Serial2.begin(57600); // GPS
   Serial3.begin(57600); // OSD and TM
   
   pinMode(GREEN_LED, OUTPUT);  
@@ -226,7 +241,7 @@ void setup() {
   delay(100);
   gear_pers_count = 0;
   
-
+  GPSwarmBoot(float(34.688), float(-118.328), int(730));
 }
 
 
@@ -236,6 +251,9 @@ void loop() {
   if(frame>10) frame = 1;
   
   
+  if(p_error == 0)
+  {
+  p_t1 = millis();
   Wire1.begin();
   //get Pressure Altitude
   if(frame == 1) bmp085RequestUT();
@@ -244,14 +262,31 @@ void loop() {
   if(frame == 10) 
   {
   pressure = bmp085GetPressure(bmp085ReadUP(OSS), ac1_ptc, ac2_ptc, ac3_ptc, ac4_ptc,b1_ptc, b2_ptc, b5_ptc, OSS);
-  altitude_m = (float)44330 * (1 - pow(((float) pressure/p0), 0.190295))*3.28084 - altitude_home_m;
+  altitude_raw_ft = (float)44330 * (1 - pow(((float) pressure/p0), 0.190295))*3.28084;
+    
+  altitude_ft = low_pass(altitude_raw_ft, altitude_ft, float(1.5), deltat*10, float(20));
+  altitude_agl_ft = altitude_ft - altitude_home_ft;
   }
- 
+  p_t2 = millis();
+  }
+  else
+  {
+    altitude_ft = altitude_home_ft+10;
+    altitude_agl_ft = 10;
+  }
+  p_counter++;
+  if(p_counter > 800)
+    p_init = 1;
+ if(p_init == 1 && ((p_t2-p_t1) > 20))
+   p_timeout_counter++;
+ if(p_timeout_counter > 4)
+     p_error = 1;
+    
+  
   // Get GPS data
   gps_data = getGPSdata(&gps_fix, &gps_sats, &lat, &lon, &gps_alt_m);
   GPS2home(lat, lat_home, lon, lon_home, psi, &heading_home, &dist_home_m);
 
-  
   //Get IMU Sensor Data
   request_IMU_data();
   read_IMU_data(a_bytes,m_bytes,w_bytes);
@@ -300,7 +335,7 @@ void loop() {
   
   
   // Startup mode:
-  mode = arming(throttle_pos, pitch_pos, roll_pos, yaw_pos, flap_pos, phi, theta,  gps_fix, gps_sats, &altitude_home_m,  altitude_m, &lat_home,  lat, &lon_home, lon);
+  mode = arming(throttle_pos, pitch_pos, roll_pos, yaw_pos, flap_pos, phi, theta,  gps_fix, gps_sats, &altitude_home_ft,  altitude_ft, &lat_home,  lat, &lon_home, lon);
 
  
   // Control Laws - Set motor commands
@@ -339,7 +374,8 @@ void loop() {
   // Place holder variables
    float hdot = 0;
    float ultra_altitude = 0;
-  
+   
+   
    dt_step_array[frame-1] = (int)1/deltat;
    dt_step = dt_step_array[0];
    for(int i=1;i<10;i++)
@@ -363,13 +399,16 @@ void loop() {
   {
   analogReadResolution(12);
   voltage_analog_in = analogRead(VOLTAGE_PIN_AN);
-  batt_v = ((float)voltage_analog_in) * 0.01238570 + 0.36476789;
+  batt_raw_v = ((float)voltage_analog_in) * 0.01238570 + 0.36476789;
+  batt_v = low_pass(batt_raw_v, batt_v, float(.2), deltat*10, float(3));
   
   current_analog_in = analogRead(CURRENT_PIN_AN);
-  batt_i = ((float)current_analog_in) * 0.01238570 + 0.36476789; // update this equation
+  batt_raw_i = ((float)current_analog_in) * 0.01238570 + 0.36476789; // update this equation
+  batt_i = low_pass(batt_raw_i, batt_i, float(.5), deltat*10, float(10));
   }
 
-  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, mode, altitude_m, hdot, ultra_altitude, rssi, batt_v, batt_i, dist_home_m, heading_home, lat, lon, gps_fix, gps_sats);
+  //add p_error warning, check units
+  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, mode, altitude_agl_ft, hdot, ultra_altitude, rssi, batt_v, batt_i, dist_home_m, heading_home, lat, lon, gps_fix, gps_sats);
  
   
   // SD Card data Logging
@@ -392,7 +431,7 @@ void loop() {
   // Display data
   if(serial_output)
   {
-
+Serial.println(heading_home,1);
 
     /*
     Serial.print("Phi:");
@@ -422,16 +461,16 @@ void loop() {
       Serial.println();
        
         */
-     
-     
-    Serial.print("t:");
-    Serial.print(temperature);
+        /*
+    Serial.print("a:");
+    Serial.print(altitude_ft,1);
     Serial.print("\t");
-        Serial.print("a:");
-    Serial.print(altitude_m,1);
+    Serial.print("a:");
+    Serial.print(altitude_raw_ft,1);
     Serial.print("\t");
-     Serial.println();
-   
+    Serial.println();
+   */
+
    
 /*
     Serial.print("t:");

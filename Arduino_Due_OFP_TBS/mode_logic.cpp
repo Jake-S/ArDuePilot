@@ -57,6 +57,8 @@ int arming(int throttle_pos,int pitch_pos,int roll_pos,int yaw_pos,int flap_pos,
       *altitude_home_m = altitude_m; 
       *lat_home = lat; 
       *lon_home = lon; 
+      //*lat_home = 34.666; 
+     //*lon_home = -118.17; 
     }
   }
   else if(mode_arming == 4)

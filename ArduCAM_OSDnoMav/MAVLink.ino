@@ -95,7 +95,7 @@
             osd_home_distance = (long)(((d1 << 8)+d2));
             d1 = Serial.read();
             d2 = Serial.read();
-            osd_home_direction = round((float)(((float)((d1 << 8)+d2))/40/360.0f) * 16.0f) + 1;
+            osd_home_direction = round((float)(((float)((d1 << 8)+d2))/40/360.0f) * 16.0f)+1;
             d1 = Serial.read();
             d2 = Serial.read();
            
