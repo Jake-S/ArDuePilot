@@ -33,8 +33,6 @@
 #include "OSD_Vars.h"
 #include "OSD_Func.h"
 
-/* *************************************************/
-/* ***************** DEFINITIONS *******************/
 //OSD Hardware 
 //#define ArduCAM328
 #define MinimOSD
@@ -45,115 +43,92 @@
 // Objects and Serial definitions
 FastSerialPort0(Serial);
 OSD osd; //OSD object 
-
 SimpleTimer  mavlinkTimer;
-
-
 
 void setup() 
 {
 #ifdef ArduCAM328
-    pinMode(10, OUTPUT); // USB ArduCam Only
+  pinMode(10, OUTPUT); // USB ArduCam Only
 #endif
-    pinMode(MAX7456_SELECT,  OUTPUT); // OSD CS
+  pinMode(MAX7456_SELECT,  OUTPUT); // OSD CS
 
-    Serial.begin(TELEMETRY_SPEED);
-    // setup mavlink port
-    mavlink_comm_0_port = &Serial;
+  Serial.begin(TELEMETRY_SPEED);
+  // setup mavlink port
+  mavlink_comm_0_port = &Serial;
 
 #ifdef membug
-    Serial.println(freeMem());
+  Serial.println(freeMem());
 #endif
 
-    // Prepare OSD for displaying 
-    unplugSlaves();
-    osd.init();
+  // Prepare OSD for displaying 
+  unplugSlaves();
+  osd.init();
 
-    // Start 
-    startPanels();
-    delay(500);
+  // Start 
+  startPanels();
+  delay(500);
 
-    // OSD debug for development (Shown at start)
+  // OSD debug for development (Shown at start)
 #ifdef membug
-    osd.setPanel(1,1);
+  osd.setPanel(1,1);
+  osd.openPanel();
+  osd.printf("%i",freeMem()); 
+  osd.closePanel();
+#endif
+
+  // Check EEPROM to for a new version that needs EEPROM reset
+  if(readEEPROM(CHK_VERSION) != VER) {
+    osd.setPanel(3,9);
     osd.openPanel();
-    osd.printf("%i",freeMem()); 
+    osd.printf_P(PSTR("EEPROM mapping outdated!|Update with the OSD Tool.")); 
     osd.closePanel();
-#endif
-
-    // Check EEPROM to for a new version that needs EEPROM reset
-    if(readEEPROM(CHK_VERSION) != VER) {
-        osd.setPanel(3,9);
-        osd.openPanel();
-        osd.printf_P(PSTR("EEPROM mapping outdated!|Update with the OSD Tool.")); 
-        osd.closePanel();
-        // run for ever until EEPROM version is OK 
-        for(;;) {}
+    // run for ever until EEPROM version is OK 
+    for(;;) {
     }
+  }
 
-    // Get correct panel settings from EEPROM
-    readSettings();
-    for(panel = 0; panel < npanels; panel++) readPanelSettings();
-    panel = 0; //set panel to 0 to start in the first navigation screen
-    // Show bootloader bar
-    loadBar();
+  // Get correct panel settings from EEPROM
+  readSettings();
+  for(panel = 0; panel < npanels; panel++) readPanelSettings();
+  panel = 0; //set panel to 0 to start in the first navigation screen
+  // Show bootloader bar
+  loadBar();
 
-    // Startup MAVLink timers  
-    mavlinkTimer.Set(&OnMavlinkTimer, 120);
+  // Startup MAVLink timers  
+  mavlinkTimer.Set(&OnMavlinkTimer, 120);
 
-    // House cleaning, clear display and enable timers
-    osd.clear();
-    mavlinkTimer.Enable();
-
-
-// Initialize values
-
+  // House cleaning, clear display and enable timers
+  osd.clear();
+  mavlinkTimer.Enable();
 
   // Turn speed warnings off:
   stall = 0;
   overspeed = 100;
-  
+
   calc_home = 0;
 
-} // END of setup();
-
-
-
-/* ***********************************************/
-/* ***************** MAIN LOOP *******************/
+}
 
 void loop() 
 {
- 
-  
-  
-  
-  
-
-  
-    read_mavlink();
-    mavlinkTimer.Run();
+  read_mavlink();
+  mavlinkTimer.Run();
 }
 
-/* *********************************************** */
-/* ******** functions used in main loop() ******** */
 void OnMavlinkTimer()
 {
-    setHeadingPatern();  // generate the heading patern
-
-    //  osd_battery_pic_A = setBatteryPic(osd_battery_remaining_A);     // battery A remmaning picture
-    //osd_battery_pic_B = setBatteryPic(osd_battery_remaining_B);     // battery B remmaning picture
-
-    setHomeVars(osd);   // calculate and set Distance from home and Direction to home
-    
-    writePanels();       // writing enabled panels (check OSD_Panels Tab)
+  setHeadingPatern();  // generate the heading patern
+  //osd_battery_pic_A = setBatteryPic(osd_battery_remaining_A);     // battery A remmaning picture
+  //osd_battery_pic_B = setBatteryPic(osd_battery_remaining_B);     // battery B remmaning picture
+  setHomeVars(osd);   // calculate and set Distance from home and Direction to home   
+  writePanels();       // writing enabled panels (check OSD_Panels Tab)
 }
-
 
 void unplugSlaves(){
-    //Unplug list of SPI
+  //Unplug list of SPI
 #ifdef ArduCAM328
-    digitalWrite(10,  HIGH); // unplug USB HOST: ArduCam Only
+  digitalWrite(10,  HIGH); // unplug USB HOST: ArduCam Only
 #endif
-    digitalWrite(MAX7456_SELECT,  HIGH); // unplug OSD
+  digitalWrite(MAX7456_SELECT,  HIGH); // unplug OSD
 }
+

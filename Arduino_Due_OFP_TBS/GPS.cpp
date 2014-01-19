@@ -187,12 +187,22 @@ void GPS2home(double lat,double lat_home,double lon,double lon_home,float psi, f
   double y = sin(dLon) * cos(lat_home_rad);
   double x = cos(lat_rad)*sin(lat_home_rad) - sin(lat_rad)*cos(lat_home_rad)*cos(dLon);
   double bearing = atan2(y, x) / deg2rad;
-  if(bearing < 0) bearing += 360;
-  bearing = bearing - 180;//go towards home, not away
-  if(bearing < 0) bearing += 360;
-  bearing = bearing - psi + B_DECLINATION;
-  if(bearing < 0) bearing += 360; 
+  
+  double heading = bearing - (psi - B_DECLINATION);
+  if(heading < 0)
+     heading += 360;
 
-  *heading_home = bearing;
+    if(heading < 0)
+     heading += 360;
+
+  if(heading > 360) 
+      heading -= 360;
+
+  if(heading > 360) 
+      heading -= 360;
+
+
+
+  *heading_home = heading;
 }
 

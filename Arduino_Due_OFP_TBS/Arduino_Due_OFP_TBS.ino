@@ -408,7 +408,7 @@ void loop() {
   }
 
   //add p_error warning, check units
-  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, mode, altitude_agl_ft, hdot, ultra_altitude, rssi, batt_v, batt_i, dist_home_m, heading_home, lat, lon, gps_fix, gps_sats);
+  osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, mode, altitude_agl_ft, hdot, ultra_altitude, rssi, batt_v, batt_i, dist_home_m*3.28, heading_home, lat, lon, gps_fix, gps_sats);
  
   
   // SD Card data Logging

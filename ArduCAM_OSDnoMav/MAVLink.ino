@@ -6,8 +6,8 @@
   static int parse_error = 0;
   
   
-  
-  // Replcae Mavlink with own comm 
+  int upload_font = 0; //switch to 1 to upload new character set, then switch back to 0 after.
+
   
  void read_mavlink(){
     
@@ -15,7 +15,8 @@
    float lat_2;
    float lon_1;
    float lon_2;
-   
+   if(upload_font == 0)
+   {
     while(Serial.available() >= 8) {
       
       if(loop_counter == 0)
@@ -95,7 +96,7 @@
             osd_home_distance = (long)(((d1 << 8)+d2));
             d1 = Serial.read();
             d2 = Serial.read();
-            osd_home_direction = round((float)(((float)((d1 << 8)+d2))/40/360.0f) * 16.0f)+1;
+            osd_home_direction = (float)((float)((d1 << 8)+d2)/40/2.0f);
             d1 = Serial.read();
             d2 = Serial.read();
            
@@ -141,17 +142,14 @@
       
     }
       
-    /*
-      mavlink_message_t msg; 
-      mavlink_status_t status;
-  
-      //grabing data 
+   }
+   else
+   {
+       //grabing data 
       while(Serial.available() > 0) { 
           uint8_t c = Serial.read();
   
-         // allow CLI to be started by hitting enter 3 times, if no
-          //heartbeat packets have been received
-          if (mavlink_active == 0 && millis() < 20000 && millis() > 5000) {
+   
               if (c == '\n' || c == '\r') {
                   crlf_count++;
               } else {
@@ -160,7 +158,27 @@
               if (crlf_count == 3) {
                   uploadFont();
               }
-          }
+      }
+      
+   }
+    /*
+      mavlink_message_t msg; 
+      mavlink_status_t status;
+  
+      //grabing data 
+      while(Serial.available() > 0) { 
+          uint8_t c = Serial.read();
+  
+   
+              if (c == '\n' || c == '\r') {
+                  crlf_count++;
+              } else {
+                  crlf_count = 0;
+              }
+              if (crlf_count == 3) {
+                  uploadFont();
+              }
+          
   
           //trying to grab msg  
           if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {

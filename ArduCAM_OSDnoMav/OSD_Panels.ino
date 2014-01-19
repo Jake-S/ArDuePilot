@@ -45,9 +45,10 @@ void writePanels(){
                 //Testing bits from 8 bit register A 
               
                // DT panel
-                panDTstep(panRSSI_XY[0][panel], panRSSI_XY[1][panel]+2);   //?x?
-                panRSSI(panRSSI_XY[0][panel] , panRSSI_XY[1][panel] ); //??x??
+                panDTstep(panFMod_XY[0][panel], panFMod_XY[1][panel]+1);   //?x?
                 
+                panRSSI(panRSSI_XY[0][panel] , panRSSI_XY[1][panel] ); //??x??
+     
                 
                 
                 if(ISa(panel,Cen_BIT)) panCenter(panCenter_XY[0][panel], panCenter_XY[1][panel]);   //4x2
@@ -179,8 +180,7 @@ void panRSSI(int first_col, int first_line){
 void panDTstep(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    osd.printf_P(PSTR("dt"));
-    osd.printf("%3i", (int)osd_dt_step); //0xB3,
+    osd.printf("%c%3i", 0x8C, (int)osd_dt_step); //0xB3,
     osd.closePanel();
 }
 
@@ -412,7 +412,7 @@ void panOff(){
 void panCur_A(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    osd.printf("%c%5.2f%c", 0xE4, (float(osd_curr_A)), 0x8F);
+    osd.printf("%5.2f%c", (float(osd_curr_A)), 0x8F);
     osd.closePanel();
 }
 
@@ -427,7 +427,7 @@ void panAlt(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
     //osd.printf("%c%5.0f%c",0x85, (double)(osd_alt - osd_home_alt), 0x8D);
-    osd.printf("%c%5.0f%c",0xE6, (double)(osd_alt * converth), high);
+    osd.printf("%c%5.0f%c",0x85, (double)(osd_alt), 0x8B);
     osd.closePanel();
 }
 
@@ -456,7 +456,7 @@ void panHomeAlt(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
     //osd.printf("%c%5.0f%c",0x85, (double)(osd_alt - osd_home_alt), 0x8D);
-    osd.printf("%c%5.0f%c",0xE7, (double)((osd_alt - osd_home_alt) * converth), high);
+    osd.printf("%c%5.0f%c",0xE7, (double)((osd_alt - osd_home_alt)), high);
     osd.closePanel();
 }
 
@@ -632,7 +632,7 @@ void panTime(int first_col, int first_line){
 void panHomeDis(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    osd.printf("%c%5.0f%c", 0x1F, (float)((osd_home_distance) * converth), high);
+    osd.printf("%c%5.0f%c%c", 0x1F, (float)((osd_home_distance)), 0x8B, 0x1C);
     osd.closePanel();
 }
 
@@ -712,7 +712,7 @@ void panBatt_A(int first_col, int first_line){
         osd.printf(" %c%5.2f%c", 0xE2, (double)osd_vbat_A, 0x8E);
     else osd.printf("%c%5.2f%c%c", 0xE2, (double)osd_vbat_A, 0x8E, osd_battery_pic_A);
     */
-   osd.printf("%c%5.2f%c", 0xE2, (float)osd_vbat_A, 0x8E);
+   osd.printf("%5.2f%c", (float)osd_vbat_A, 0x8E);
     osd.closePanel();
 }
 
@@ -737,9 +737,9 @@ void panGPL(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
     char* gps_str;
-    if(osd_fix_type == 0 || osd_fix_type == 1) gps_str = "\x10\x20"; 
+    if(osd_fix_type == 0 || osd_fix_type == 1) gps_str = "\x10"; 
         //osd.printf_P(PSTR("\x10\x20"));
-    else if(osd_fix_type == 2 || osd_fix_type == 3) gps_str = "\x11\x20";
+    else if(osd_fix_type == 2 || osd_fix_type == 3) gps_str = "\x11";
         //osd.printf_P(PSTR("\x11\x20"));
     osd.printf("%s",gps_str);
 
@@ -775,7 +775,7 @@ void panGPSats(int first_col, int first_line){
 void panGPS(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    osd.printf("%c%11.5f|%c%11.5f", 0x83, (double)osd_lat, 0x84, (double)osd_lon);
+    osd.printf("%10.5f|%10.5f",  (double)osd_lat, (double)osd_lon);
     osd.closePanel();
 }
 
@@ -835,12 +835,13 @@ void panBoot(int first_col, int first_line){
 void panMavBeat(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    if(mavbeat == 1){
-        osd.printf_P(PSTR("\xEA\xEC"));
+    if(millis() > (lastMAVBeat + 1000))
+    {
+        osd.printf_P(PSTR("\x1C\xEB")); //blank, beat
         mavbeat = 0;
     }
     else{
-        osd.printf_P(PSTR("\xEA\xEB"));
+        osd.printf_P(PSTR("\x1C\xEC"));
     }
     osd.closePanel();
 }
@@ -912,7 +913,7 @@ void panFlightMode(int first_col, int first_line){
         else if (osd_nav_mode == 5) mode_str = "rth "; 
 
     
-    osd.printf("%c%s", 0xE0, mode_str);
+    osd.printf("%s",  mode_str);
     osd.closePanel();
 }
 
@@ -922,76 +923,94 @@ void panFlightMode(int first_col, int first_line){
 void showArrow(uint8_t rotate_arrow,uint8_t method) {  
     char arrow_set1 = 0x0;
     char arrow_set2 = 0x0;   
-    switch(rotate_arrow) {
-    case 0: 
+    float dir = rotate_arrow*2;
+    
+   
+    if(dir>=348.75 || dir < 11.25)
+    {
         arrow_set1 = 0x90;
         arrow_set2 = 0x91;
-        break;
-    case 1: 
-        arrow_set1 = 0x90;
-        arrow_set2 = 0x91;
-        break;
-    case 2: 
+    }
+    else if(dir>=11.25 && dir < 33.75)
+    {
         arrow_set1 = 0x92;
         arrow_set2 = 0x93;
-        break;
-    case 3: 
+    }
+  else if(dir>=33.75 && dir < 56.25)
+    {
         arrow_set1 = 0x94;
         arrow_set2 = 0x95;
-        break;
-    case 4: 
+    }
+    else if(dir>=56.25 && dir < 78.75)
+    {
         arrow_set1 = 0x96;
         arrow_set2 = 0x97;
-        break;
-    case 5: 
+    }
+    else if(dir>=78.75 && dir < 101.15)
+    {
         arrow_set1 = 0x98;
         arrow_set2 = 0x99;
-        break;
-    case 6: 
+    }
+    else if(dir>=101.25 && dir < 123.75)
+    {
         arrow_set1 = 0x9A;
         arrow_set2 = 0x9B;
-        break;
-    case 7: 
+    }
+    else if(dir>=123.25 && dir < 146.25)
+    {
         arrow_set1 = 0x9C;
         arrow_set2 = 0x9D;
-        break;
-    case 8: 
+    }
+    else if(dir>=146.25 && dir < 168.75)
+    {
         arrow_set1 = 0x9E;
         arrow_set2 = 0x9F;
-        break;
-    case 9: 
+    }
+    else if(dir>=168.75 && dir < 191.25)
+    {
         arrow_set1 = 0xA0;
         arrow_set2 = 0xA1;
-        break;
-    case 10: 
+    }
+    else if(dir>=191.25 && dir < 213.75)
+    {
         arrow_set1 = 0xA2;
         arrow_set2 = 0xA3;
-        break;
-    case 11: 
+    }
+    else if(dir>=213.75 && dir < 236.25)
+    {
         arrow_set1 = 0xA4;
         arrow_set2 = 0xA5;
-        break;
-    case 12: 
+    }
+    else if(dir>=236.25 && dir < 258.75)
+    {
         arrow_set1 = 0xA6;
         arrow_set2 = 0xA7;
-        break;
-    case 13: 
+    }
+    else if(dir>=258.75 && dir < 281.25)
+    {
         arrow_set1 = 0xA8;
         arrow_set2 = 0xA9;
-        break;
-    case 14: 
+    }
+    else if(dir>=281.25 && dir < 303.75)
+    {
         arrow_set1 = 0xAA;
         arrow_set2 = 0xAB;
-        break;
-    case 15: 
+    }
+    else if(dir>=302.75 && dir < 326.25)
+    {
         arrow_set1 = 0xAC;
-        arrow_set2 = 0xAd;
-        break;
-    case 16: 
+        arrow_set2 = 0xAD;
+    }
+    else if(dir>=326.25 && dir < 348.75)
+    {
         arrow_set1 = 0xAE;
         arrow_set2 = 0xAF;
-        break;
-    } 
+    }
+    else
+    {
+      arrow_set1 = 0x1C;
+      arrow_set2 = 0x1C;
+    }
     if(method == 1) osd.printf("%c%3.0f%c|%c%c",0xFC,(double)(osd_windspeed * converts),spe, arrow_set1, arrow_set2);
     else osd.printf("%c%c", arrow_set1, arrow_set2);
 }
