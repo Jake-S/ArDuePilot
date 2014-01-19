@@ -35,7 +35,7 @@ static float        converts = 0;
 static float        converth = 0;
 static uint8_t      overspeed = 0;
 static uint8_t      stall = 0;
-static uint8_t      battv = 11;                
+static uint8_t      battv = 14.2;                
 static int8_t       osd_battery_remaining_A = 10;    
 
 

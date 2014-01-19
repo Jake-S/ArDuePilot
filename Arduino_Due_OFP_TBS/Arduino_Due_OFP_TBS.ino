@@ -27,7 +27,7 @@ float low_pass(float u, float y_last, float tau, float dt, float max_delta);
 
 //One_off_switches
 int sd_logging = 0;
-int serial_output = 1;
+int serial_output = 0;
 
 // Motor Vars:
 int motor_fr_cmd = 0;
@@ -136,7 +136,7 @@ float heading_home = 0;
 float dist_home_m = 0;
 
 //gear failsafe switch
-volatile int gear_pers_count;
+volatile int gear_pers_count = 0;
 int mode = 0;
 
 //OSD vars 
@@ -215,9 +215,6 @@ void setup() {
     delay(1);
   }
 
-  // Get initial GPS data (likely no fix)
-  gps_data = getGPSdata(&gps_fix, &gps_sats, &lat, &lon, &gps_alt_m);
-
   // Receiver Interrupts:
   attachInterrupt(THROTTLE_PIN,ISR_throttle,CHANGE);
   attachInterrupt(AIL_PIN,ISR_roll,CHANGE);
@@ -227,10 +224,10 @@ void setup() {
   attachInterrupt(FLAP_PIN,ISR_flap,CHANGE);
 
   //Motor Servos
-  motor_FR.attach(MOTOR_1_PIN);
-  motor_FL.attach(MOTOR_2_PIN);
-  motor_BR.attach(MOTOR_3_PIN);
-  motor_BL.attach(MOTOR_4_PIN);
+  motor_FR.attach(MOTOR_3_PIN);
+  motor_FL.attach(MOTOR_4_PIN);
+  motor_BR.attach(MOTOR_1_PIN);
+  motor_BL.attach(MOTOR_2_PIN);
 
   delay(100);
   motor_FR.writeMicroseconds(0); 
@@ -238,9 +235,7 @@ void setup() {
   motor_BR.writeMicroseconds(0); 
   motor_BL.writeMicroseconds(0); 
   
-  delay(100);
-  gear_pers_count = 0;
-  
+  // Reboot GPS with initial coordinates
   GPSwarmBoot(float(34.688), float(-118.328), int(730));
 }
 
@@ -431,8 +426,6 @@ void loop() {
   // Display data
   if(serial_output)
   {
-Serial.println(heading_home,1);
-
     /*
     Serial.print("Phi:");
     Serial.print(phi);
@@ -447,7 +440,7 @@ Serial.println(heading_home,1);
    */
    
    /*
-       Serial.print("Fix:");
+    Serial.print("Fix:");
     Serial.print(gps_fix);
     Serial.print("\t");
     Serial.print("Sats:");
@@ -456,12 +449,12 @@ Serial.println(heading_home,1);
     Serial.print("lat:");
     Serial.print(lat,6);
     Serial.print("\t");
-        Serial.print("lon:");
+    Serial.print("lon:");
     Serial.print(lon,6);
-      Serial.println();
-       
-        */
-        /*
+    Serial.println();
+    */
+    
+    /*
     Serial.print("a:");
     Serial.print(altitude_ft,1);
     Serial.print("\t");
@@ -471,8 +464,7 @@ Serial.println(heading_home,1);
     Serial.println();
    */
 
-   
-/*
+    /*
     Serial.print("t:");
     Serial.print(throttle_pos);
     Serial.print("\t");
@@ -482,19 +474,21 @@ Serial.println(heading_home,1);
     Serial.print("r:");
     Serial.print(roll_pos);
     Serial.print("\t");
-      Serial.print("y:");
+    Serial.print("y:");
     Serial.print(yaw_pos);
     Serial.print("\t");
-          Serial.print("g:");
-        Serial.print(gear_pos);
+    Serial.print("g:");
+    Serial.print(gear_pos);
     Serial.print("\t");
-          Serial.print("f:");
-        Serial.print(flap_pos);
+    Serial.print("f:");
+    Serial.print(flap_pos);
     Serial.print("\t");
-      Serial.println();
-       */
+    Serial.print("g count:");
+    Serial.print(gear_pers_count);
+    Serial.println();
+   */
 
-/*
+   /*
     Serial.print("FR:");
     Serial.print(motor_fr_cmd);
     Serial.print("\t");
@@ -509,20 +503,16 @@ Serial.println(heading_home,1);
     Serial.print("\t");
     Serial.println();
     */
-   
-   /*
-      Serial.print(gear_pers_count);
-    Serial.println();
-*/
- /*
-    Serial.print("0:");
-     Serial.print(m_n_xyz[0]);
+    
+    /*
+     Serial.print("0:");
+     Serial.print(w_dps_xyz[0]);
      Serial.print("\t");
      Serial.print("1:");
-     Serial.print(m_n_xyz[1]);
+     Serial.print(w_dps_xyz[1]);
      Serial.print("\t");
      Serial.print("2:");
-     Serial.print(m_n_xyz[2]);
+     Serial.print(w_dps_xyz[2]);
      Serial.println();
     */
     
@@ -538,7 +528,7 @@ Serial.println(heading_home,1);
      Serial.println(w_raw_data[0]);
      Serial.println(w_raw_data[1]);
      Serial.println(w_raw_data[2]);
-*/
+    */
 
   }
 

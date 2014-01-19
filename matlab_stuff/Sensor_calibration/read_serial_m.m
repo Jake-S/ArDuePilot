@@ -1,0 +1,139 @@
+clear all
+close all
+clc
+
+
+%%
+s = serial('COM3','BaudRate',57600);
+fopen(s);
+
+
+%%
+n = 7000;
+x = 0;
+while (x==0)
+    data = str2double(fscanf(s));
+    if data > 9800
+        x=1;
+    end
+end
+
+accel = zeros(n,3);
+mag = zeros(n,3);
+gyro = zeros(n,3);
+data0 = zeros(n,1);
+
+for i = 1:1:n
+    accel(i,1) = str2double(fscanf(s));
+    accel(i,2) = str2double(fscanf(s));
+    accel(i,3) = str2double(fscanf(s));
+    mag(i,1) = str2double(fscanf(s));
+    mag(i,2) = str2double(fscanf(s));
+    mag(i,3) = str2double(fscanf(s));
+    gyro(i,1) = str2double(fscanf(s));
+    gyro(i,2) = str2double(fscanf(s));
+    gyro(i,3) = str2double(fscanf(s));
+    data0(i) = str2double(fscanf(s));
+    
+    if mod(i,25) == 0
+        disp(i)
+    end
+end
+fclose(s);
+
+%%
+figure
+hold on
+plot([1:1:n],accel(:,1),'b')
+plot([1:1:n],accel(:,2),'r')
+plot([1:1:n],accel(:,3),'g')
+figure
+hold on
+plot([1:1:n],mag(:,1),'b')
+plot([1:1:n],mag(:,2),'r')
+plot([1:1:n],mag(:,3),'g')
+figure
+hold on
+plot([1:1:n],gyro(:,1),'b')
+plot([1:1:n],gyro(:,2),'r')
+plot([1:1:n],gyro(:,3),'g')
+% for i = 1:1:n
+% plot3(accel)
+
+figure
+plot3(mag(:,1), mag(:,2), mag(:,3),'*b')
+axis equal
+
+figure
+plot3(accel(:,1),accel(:,2), accel(:,3),'*b')
+axis equal
+%%
+%% Accel
+beta_guess = [-40,-90,200,0.007,0.007,0.007];
+beta_a = gaussnewton(accel, beta_guess, 2000);
+% beta_a = beta_guess;
+
+a_x = beta_a(4).*(accel(:,1)-beta_a(1));
+a_y = beta_a(5).*(accel(:,2)-beta_a(2));
+a_z = beta_a(6).*(accel(:,3)-beta_a(3));
+
+
+figure
+plot3(accel(:,1), accel(:,2), accel(:,3),'*b')
+axis equal
+
+figure
+plot3(a_x,a_y,a_z,'*b')
+axis equal
+hold on
+sphere(20)
+alpha .1
+xlabel('x')
+ylabel('y')
+ %% Mag
+beta_guess = [36,26,-130,.002,.002,.002];
+beta = gaussnewton(mag, beta_guess, 2000);
+
+m_x = beta(4).*(mag(:,1)-beta(1));
+m_y = beta(5).*(mag(:,2)-beta(2));
+m_z = beta(6).*(mag(:,3)-beta(3));
+
+
+figure
+plot3(mag(:,1), mag(:,2), mag(:,3),'*b')
+axis equal
+
+figure
+plot3(m_x,m_y,m_z,'*b')
+axis equal
+hold on
+sphere(20)
+alpha .1
+
+%%
+% clc
+% format long
+% disp('accel cal')
+% beta_a'
+% disp('mag cal')
+% beta'
+
+
+%%
+clc
+disp(['// Calibration on:' date])
+disp(['// Accels'])
+disp(['#define CAL_ACCEL_d_x ' num2str(beta_a(1),14)])
+disp(['#define CAL_ACCEL_d_y ' num2str(beta_a(2),14)])
+disp(['#define CAL_ACCEL_d_z ' num2str(beta_a(3),14)])
+disp(['#define CAL_ACCEL_m_x ' num2str(beta_a(4),14)])
+disp(['#define CAL_ACCEL_m_y ' num2str(beta_a(5),14)])
+disp(['#define CAL_ACCEL_m_z ' num2str(beta_a(6),14)])
+disp([' '])
+disp(['// Mags'])
+disp(['#define CAL_MAG_d_x ' num2str(beta(1),14)])
+disp(['#define CAL_MAG_d_y ' num2str(beta(2),14)])
+disp(['#define CAL_MAG_d_z ' num2str(beta(3),14)])
+disp(['#define CAL_MAG_m_x ' num2str(beta(4),14)])
+disp(['#define CAL_MAG_m_y ' num2str(beta(5),14)])
+disp(['#define CAL_MAG_m_z ' num2str(beta(6),14)])
