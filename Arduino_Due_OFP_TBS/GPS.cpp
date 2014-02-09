@@ -10,22 +10,22 @@ byte gps_msg[67];
 int msg_lng = 66;
 byte send_msg[22];
 
-int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gps_alt_m)
+int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gps_alt_m, double *gps_gs_mph)
 {
 
   int gps_data = 0; // = 0 = no data, 1 = data, 2 = checksum error
   int gps_string_valid = 1;
 
 
-  while(Serial2.available() >= msg_lng)
+  while(Serial1.available() >= msg_lng)
   {
     if(gps_string_valid == 1)
     {
-      gps_msg[0] = Serial2.read();
-      gps_msg[1] = Serial2.read();
-      gps_msg[2] = Serial2.read();
-      gps_msg[3] = Serial2.read();
-      gps_msg[4] = Serial2.read();
+      gps_msg[0] = Serial1.read();
+      gps_msg[1] = Serial1.read();
+      gps_msg[2] = Serial1.read();
+      gps_msg[3] = Serial1.read();
+      gps_msg[4] = Serial1.read();
     }
     else
     {
@@ -33,7 +33,7 @@ int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gp
       {
         gps_msg[i] = gps_msg[i+1];
       }
-      gps_msg[4] = Serial2.read();
+      gps_msg[4] = Serial1.read();
     }
 
     if(gps_msg[0]==0xA0 && gps_msg[1]==0xA1 && gps_msg[2]==0x00 && gps_msg[3]==0x3B && gps_msg[4]==0xA8)
@@ -41,7 +41,7 @@ int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gp
       // Data message
       for(int i=5;i<=msg_lng-1; i++)
       {
-        gps_msg[i] = Serial2.read();
+        gps_msg[i] = Serial1.read();
       }
       
 
@@ -66,7 +66,15 @@ int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gp
          *lat = (double)( (int)gps_msg[3+10] * 16777216 + (int)gps_msg[3+11]*65536 + (int)gps_msg[3+12]*256 + (int)gps_msg[3+13]) / 10000000;
          *lon = (double)( (int)gps_msg[3+14] * 16777216 + (int)gps_msg[3+15]*65536 + (int)gps_msg[3+16]*256 + (int)gps_msg[3+17]) / 10000000;
 
+          //this may not be correct (should be unsigned int)
         *gps_alt_m = (double)( (int)gps_msg[3+22] * 16777216 + (int)gps_msg[3+23]*65536 + (int)gps_msg[3+24]*256 + (int)gps_msg[3+25]) / 100;
+
+
+      double v_x = (double)( (int)gps_msg[3+48] * 16777216 + (int)gps_msg[3+49]*65536 + (int)gps_msg[3+50]*256 + (int)gps_msg[3+51]) / 100;
+      double v_y = (double)( (int)gps_msg[3+52] * 16777216 + (int)gps_msg[3+53]*65536 + (int)gps_msg[3+54]*256 + (int)gps_msg[3+55]) / 100;
+      double v_z = (double)( (int)gps_msg[3+56] * 16777216 + (int)gps_msg[3+57]*65536 + (int)gps_msg[3+58]*256 + (int)gps_msg[3+59]) / 100;
+      
+      *gps_gs_mph = sqrt(v_x*v_x + v_y*v_y + v_z*v_z)*2.23694;
 
       }
       else
@@ -74,9 +82,9 @@ int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gp
         gps_data = 2;
       }
 
-      while(Serial2.available() >0)
+      while(Serial1.available() >0)
       {
-        Serial2.read();
+        Serial1.read();
         }
 
     }
@@ -150,11 +158,11 @@ void GPSwarmBoot(float lat, float lon, int altitude)
   send_msg[21] = 0x0A;
   
  
-    Serial2.write(send_msg,22);
+    Serial1.write(send_msg,22);
     delay(2000);
-    while(Serial2.available()>0)
+    while(Serial1.available()>0)
     {
-      Serial2.read();
+      Serial1.read();
     }
  
 }

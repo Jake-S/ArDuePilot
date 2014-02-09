@@ -69,7 +69,7 @@
             osd_climb = (((d1 << 8)+d2)/100);
             d1 = Serial.read();
             d2 = Serial.read();
-            osd_ultra_alt = (((d1 << 8)+d2)/200);
+            osd_groundspeed = (((d1 << 8)+d2)/100);
            
             lastMAVBeat = millis();
             loop_counter = 0;

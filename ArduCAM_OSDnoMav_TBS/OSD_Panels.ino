@@ -11,7 +11,7 @@ void startPanels(){
 void panLogo(){
     osd.setPanel(7, 4);
     osd.openPanel();
-    osd.printf_P(PSTR("\x20\x20\x20\x20\x20\x20\xba\xbb\xbc\xbd\xbe|\x20\x20\x20\x20\x20\x20\xca\xcb\xcc\xcd\xce| Jakes OSD v2.1"));
+    osd.printf_P(PSTR("\x20\x20\x20\x20\x20\x20\xba\xbb\xbc\xbd\xbe|\x20\x20\x20\x20\x20\x20\xca\xcb\xcc\xcd\xce|   Jakes OSD   "));
     osd.closePanel();
 }
 
@@ -470,7 +470,7 @@ void panHomeAlt(int first_col, int first_line){
 void panVel(int first_col, int first_line){
     osd.setPanel(first_col, first_line);
     osd.openPanel();
-    osd.printf("%c%3.0f%c",0xE9,(double)(osd_groundspeed * converts),spe);
+    osd.printf("%c%3.0f%c",0xE9,(double)(osd_groundspeed),0xFB);
     osd.closePanel();
 }
 

@@ -10,13 +10,13 @@ void control_law(int ThrottleIn, int PitchIn, int RollIn, int YawIn, int FlapIn,
 
   float yaw_sign = 1;
  
-  float theta_Kp = 1.18;
-  float phi_Kp   = 1.18;
+  float theta_Kp = 1.35;
+  float phi_Kp   = 1.35;
   float theta_Ki = 0.0;
   float phi_Ki   = 0.0;
   
-  float p_Kp = -0.58;
-  float q_Kp = -0.58;
+  float p_Kp = -0.65;
+  float q_Kp = -0.65;
   float r_Kp = 1.62;
   
   float theta_cmd;

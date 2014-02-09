@@ -67,8 +67,8 @@ legend('gyro')
 %% Analysis
 % Accel
 close all
-beta_guess = [-1500,-4400,7000,0.0002,0.0002,0.0002];
-beta_a = gaussnewton(accel, beta_guess, 2000);
+beta_guess = [-2000,-5000,7000,0.0002,0.0002,0.0002];
+beta_a = gaussnewton(accel, beta_guess, 20000);
 % beta_a = beta_guess;
 
 a_x = beta_a(4).*(accel(:,1)-beta_a(1));

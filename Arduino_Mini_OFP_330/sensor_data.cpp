@@ -1,39 +1,7 @@
 #include <Arduino.h>
 #include "calibration.h"
 
-
-void request_IMU_data()
-{
-  Serial3.write((byte)9);
-}
-
-void read_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes)
-{
-
-  int t_start = millis();
-
-  
-    while(Serial3.available()<18 && ((millis()-t_start)<100)); // wait for data
-    
-    if(Serial3.available()>17)
-    {
-    // read data
-    for(int j=0;j<6;j++) a_bytes[j] = Serial3.read();
-    for(int j=0;j<6;j++) m_bytes[j] = Serial3.read();
-    for(int j=0;j<6;j++) w_bytes[j] = Serial3.read();
-
-
-    }
-   
-   // clear serial buffer
-    Serial3.flush();
-    while(Serial3.available()>0) Serial3.read();
-   
-}
-
-
-
-void unpack_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes, float *a_raw_data, float *m_raw_data,float *w_raw_data)
+void unpack_IMU_data(byte *a_bytes,byte *m_bytes,byte *w_bytes, float *a_raw_data, float *m_raw_data, float *w_raw_data)
 {
   int temp = 0;
   // ACCEL - adxl345
@@ -84,18 +52,18 @@ void cal_IMU_data(float *a_raw_data,float *m_raw_data,float *w_raw_data, float *
   for(int i=0;i<3;i++) w_dps_unk[i] = w_raw_data[i];
 
 
-  // Axis rotations (x = nose, y = right wing, z = into earth)
+  // Axis rotations (x = nose, y = right wing, z = down)
   a_n_xyz[0] = a_n_unk[0];
   a_n_xyz[1] = a_n_unk[1];
   a_n_xyz[2] = -a_n_unk[2];
 
-  m_n_xyz[0] = -m_n_unk[0];
-  m_n_xyz[1] = -m_n_unk[2];
+  m_n_xyz[0] = -m_n_unk[2];
+  m_n_xyz[1] = m_n_unk[0];
   m_n_xyz[2] = m_n_unk[1];
 
-  w_dps_xyz[0] = -w_dps_unk[0];
-  w_dps_xyz[1] = -w_dps_unk[1];
-  w_dps_xyz[2] = w_dps_unk[2];
+  w_dps_xyz[0] = -w_dps_unk[0] * CAL_GYRO_scale;
+  w_dps_xyz[1] = -w_dps_unk[1] * CAL_GYRO_scale;
+  w_dps_xyz[2] = w_dps_unk[2]  * CAL_GYRO_scale;
 
   // Calibrate xyz gyro
   w_dps_xyz[0] -= CAL_GYRO_zero_x;
