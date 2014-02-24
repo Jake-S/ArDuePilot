@@ -66,7 +66,7 @@ void control_law(int ThrottleIn, int PitchIn, int RollIn, int YawIn, int FlapIn,
  
    int motor_fr = ThrottleIn + ( pitch_cmd + roll_cmd + yaw_cmd);
    int motor_fl = ThrottleIn + ( pitch_cmd - roll_cmd - yaw_cmd);
-   int motor_br = ThrottleIn + (-pitch_cmd + roll_cmd - yaw_cmd);
+   int motor_br = ThrottleIn + (-pitch_cmd + roll_cmd - yaw_cmd); //positive yaw
    int motor_bl = ThrottleIn + (-pitch_cmd - roll_cmd + yaw_cmd);
    
    

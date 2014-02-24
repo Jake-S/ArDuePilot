@@ -47,7 +47,7 @@ int getGPSdata(int *gps_fix, int *num_sats, double *lat, double *lon, double *gp
 
      // Check checksum
       byte CS = 0x00;
-      for(int i = 4;i<msg_lng-4;i++)
+      for(int i = 4;i<=msg_lng-4;i++)
       {
         CS = CS^gps_msg[i];
       }

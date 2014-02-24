@@ -4,12 +4,13 @@ clc
 
 
 %%
-s = serial('COM6','BaudRate',9600);
+% s = serial('COM13','BaudRate',57600);
+s = serial('COM6','BaudRate',19200);
 fopen(s);
 
 
 %%
-n = 1000;
+n = 2000;
 x = 0;
 while (x==0)
     data = str2double(fscanf(s));
@@ -67,7 +68,8 @@ legend('gyro')
 %% Analysis
 % Accel
 close all
-beta_guess = [-1500,-4400,7000,0.0002,0.0002,0.0002];
+beta_guess = [0,-4400,7000,0.0002,0.0002,0.0002];
+% beta_guess = [00,00,00,0.002,0.002,0.002];
 beta_a = gaussnewton(accel, beta_guess, 2000);
 % beta_a = beta_guess;
 
@@ -78,6 +80,9 @@ a_z = beta_a(6).*(accel(:,3)-beta_a(3));
 
 figure
 plot3(accel(:,1), accel(:,2), accel(:,3),'*b')
+xlabel x
+ylabel y
+zlabel z
 axis equal
 legend('accel')
 
@@ -90,9 +95,11 @@ alpha .1
 xlabel('x')
 ylabel('y')
 legend('accel')
- %% Mag
-beta_guess = [36,26,-130,.002,.002,.002];
-beta = gaussnewton(mag, beta_guess, 2000);
+ % Mag
+
+beta_guess = [0,-700,450,.002,.002,.002];
+% beta_guess = [36,26,-130,.002,.002,.002];
+beta = gaussnewton(mag, beta_guess, 20000);
 
 m_x = beta(4).*(mag(:,1)-beta(1));
 m_y = beta(5).*(mag(:,2)-beta(2));
@@ -110,16 +117,8 @@ hold on
 sphere(20)
 alpha .1
 legend('mag')
-%%
-% clc
-% format long
-% disp('accel cal')
-% beta_a'
-% disp('mag cal')
-% beta'
 
-
-%%
+%
 clc
 disp(['// Calibration on:' date])
 disp(['// Accels'])

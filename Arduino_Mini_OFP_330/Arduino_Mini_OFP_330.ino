@@ -90,6 +90,7 @@ float w_error[3] = {
 int voltage_analog_in = 0;
 float batt_raw_v = 0.0;
 float batt_v = 0.0; 
+int loop_counter = 0;
 
 // OSD variables
 uint8_t first_half;  
@@ -117,10 +118,14 @@ void setup() {
   delay(100);
   bmp085Calibration(&ac1_ptc, &ac2_ptc, &ac3_ptc, &ac4_ptc, &ac5_ptc, &ac6_ptc, &b1_ptc, &b2_ptc, &mb_ptc, &mc_ptc, &md_ptc);
   delay(100);
+  
+  
+ 
 
 }
 
 void loop() {
+  loop_counter++;
   frame++;
   if(frame>10) frame = 1;
 
@@ -142,7 +147,10 @@ void loop() {
    altitude_agl_ft = altitude_ft - altitude_home_ft;
    hdot = 0;
   }
-
+if(loop_counter > 1000)
+{
+altitude_home_ft = altitude_ft;
+}
 
   //Get IMU Sensor Data
   i2c_read(ADXL345_ADDRESS, ADXL345_REGISTER_XLSB, 6, a_bytes);
@@ -168,6 +176,10 @@ void loop() {
   batt_raw_v = ((float)voltage_analog_in) * 0.01238570 + 0.36476789;
   batt_v = low_pass(batt_raw_v, batt_v, float(.2), deltat*10, float(3));
   }
+  
+  
+  
+  
   
   // Write data to OSD
   if(frame <= 8 && frame != 4)
@@ -230,6 +242,7 @@ void loop() {
     Serial.write(first_half);
     Serial.write(sencond_half);
   }
+
 
 /*
      Serial.print("0:");

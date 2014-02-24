@@ -1,7 +1,4 @@
 #include <Servo.h>
-#include <SPI.h>
-#include <SdFat.h>
-#include <String.h>
 #include <Wire.h>
 
 #include "pins_map.h"
@@ -26,7 +23,7 @@ void cal_IMU_data(float *a_raw_data,float *m_raw_data,float *w_raw_data, float *
 float low_pass(float u, float y_last, float tau, float dt, float max_delta);
 
 //One_off_switches
-int sd_logging = 0;
+
 int serial_output = 1;
 
 // Motor Vars:
@@ -84,8 +81,8 @@ short temperature;
 unsigned int temp_uncal;
 long pressure;
 const float p0 = 101325;
-float altitude_ft = 0;
-float altitude_raw_ft = 0;
+float altitude_ft = 2000;
+float altitude_raw_ft = 2000;
 float altitude_home_ft = 0;
 float altitude_agl_ft = 0;
 int alt_t_us = 0;
@@ -148,22 +145,18 @@ float throttle_percent = 0;
 int dt_step = 0;
 int voltage_analog_in = 0;
 int current_analog_in = 0;
-float batt_raw_v = 0.0;
-float batt_v = 0.0; 
+float batt_raw_v = 10.0;
+float batt_v = 10.0; 
 float batt_i = 0.0; 
 float batt_raw_i = 0.0; 
 
-//SD Card
-char SD_file_name[25];
-SdFat sd;
-ofstream SDFile;
-int buf_frame_counter = 0;
+
 
 
 // Initialization
 void setup() {
   
- // Serial.begin(57600); // USB Serial Output
+  //Serial.begin(57600); // USB Serial Output
   Serial1.begin(57600); // GPS
   Serial2.begin(57600); // OSD and TM
   Serial3.begin(57600); // IMU
@@ -174,6 +167,11 @@ void setup() {
   pinMode(BLUE_LED, OUTPUT);  
   pinMode(SOUND_PIN, OUTPUT); 
   
+  digitalWrite(YELLOW_LED, LOW);
+  digitalWrite(BLUE_LED, LOW);
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(RED_LED, HIGH);
+  
   pinMode(VOLTAGE_PIN_AN, INPUT);
   pinMode(CURRENT_PIN_AN, INPUT);
  // pinMode(RSSI_PIN_AN, INPUT);
@@ -183,24 +181,10 @@ void setup() {
   pinMode(MOTOR_3_PIN, OUTPUT);
   pinMode(MOTOR_4_PIN, OUTPUT);
   
-  
-  //SD Card
-  if(sd_logging)
-  {
-  sd.begin(SD_CARD_SPI_PIN, SPI_FULL_SPEED);
-  int log_num = 1;
-  while(1){
-       String stringOne = "log_";
-      String stringTwo = stringOne + log_num;
-      String stringThree = stringTwo + ".txt";
-      stringThree.toCharArray(SD_file_name, 25);
-      if(sd.exists(SD_file_name)==1)
-          log_num++;
-      else
-          break;
-   }
-  SDFile.open(SD_file_name, O_CREAT | O_WRITE | O_APPEND);
-  }
+  digitalWrite(MOTOR_1_PIN, LOW);
+  digitalWrite(MOTOR_2_PIN, LOW);
+  digitalWrite(MOTOR_3_PIN, LOW);
+  digitalWrite(MOTOR_4_PIN, LOW);
      
      
   //Pressure-Temp Init
@@ -412,22 +396,6 @@ void loop() {
   osd_display(frame, phi, theta, psi, dt_step, motors_armed, throttle_percent, mode, altitude_agl_ft, hdot, gps_gs_mph, rssi, batt_v, batt_i, dist_home_m*3.28, heading_home, lat, lon, gps_fix, gps_sats);
  
   
-  // SD Card data Logging
-  if(sd_logging)
-  {
-  SDFile << "12345678" << "\n";
-  if(frame == 7)
-  {
-    buf_frame_counter++;
-    if(buf_frame_counter>=4)
-    {
-    SDFile << flush;
-    buf_frame_counter = 1;
-    }
-  }
-  }
-  
-
 
   // Display data
  // if(serial_output)
@@ -471,7 +439,7 @@ void loop() {
     Serial.println();
    */
 
-    
+    /*
     Serial.print("t:");
     Serial.print(throttle_pos);
     Serial.print("\t");
@@ -493,7 +461,7 @@ void loop() {
     Serial.print("g count:");
     Serial.print(gear_pers_count);
     Serial.println();
-   
+   */
 
    /*
     Serial.print("FR:");
@@ -523,7 +491,7 @@ void loop() {
      Serial.println();
     */
     
-    /*
+    
     //Calibration Output
      Serial.println(9898.9898);
      Serial.println(a_raw_data[0]);
@@ -535,13 +503,12 @@ void loop() {
      Serial.println(w_raw_data[0]);
      Serial.println(w_raw_data[1]);
      Serial.println(w_raw_data[2]);
-    */
+    
 
   }
 
  
 }
-
 
 
 
